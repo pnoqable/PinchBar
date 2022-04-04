@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menuItemAbout.target = self
         menuItemAbout.action = #selector(openGitHub)
         statusItem.menu?.addItem(menuItemAbout)
+        
         statusItem.menu?.addItem(NSMenuItem.separator())
         
         let menuItemQuit = NSMenuItem()
@@ -25,6 +26,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menuItemQuit.target = NSApplication.shared
         menuItemQuit.action = #selector(NSApplication.stop)
         statusItem.menu?.addItem(menuItemQuit)
+        
+        let notificationCenter = NSWorkspace.shared.notificationCenter
+        notificationCenter.addObserver(self,
+                                       selector: #selector(updateEventTap),
+                                       name: NSWorkspace.didActivateApplicationNotification,
+                                       object: nil)
         
         createEventTap()
     }
@@ -57,28 +64,39 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: createEventTap)
         }
+        
+        updateEventTap()
     }
     
-    func resumeEventTap() {
-        CGEvent.tapEnable(tap: eventTap!, enable: true)
+    @objc func updateEventTap() {
+        let appName = NSWorkspace.shared.frontmostApplication?.localizedName
+        var enable = appName == "Cubase"
+        
+        if let eventTap = eventTap {
+            if enable != CGEvent.tapIsEnabled(tap: eventTap) {
+                CGEvent.tapEnable(tap: eventTap, enable: enable)
+            }
+        } else {
+            enable = false
+        }
+        
+        statusItem.button?.appearsDisabled = !enable
     }
     
     static func tapEvent(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             let instance = NSApplication.shared.delegate as! AppDelegate
-            instance.resumeEventTap()
+            instance.updateEventTap()
         } else {
             let nsEvent = NSEvent(cgEvent: event)
             if nsEvent?.type == .magnify {
-                if NSWorkspace.shared.frontmostApplication?.localizedName == "Cubase" {
-                    event.type = .scrollWheel
-                    event.setIntegerValueField(.scrollWheelEventDeltaAxis1, value: 0)
-                    event.setIntegerValueField(.scrollWheelEventDeltaAxis2, value: 0)
-                    event.setIntegerValueField(.scrollWheelEventIsContinuous, value: 1)
-                    event.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: Int64(round(nsEvent!.deltaZ)))
-                    event.setIntegerValueField(.scrollWheelEventPointDeltaAxis2, value: 0)
-                    event.flags = .maskCommand
-                }
+                event.type = .scrollWheel
+                event.setIntegerValueField(.scrollWheelEventDeltaAxis1, value: 0)
+                event.setIntegerValueField(.scrollWheelEventDeltaAxis2, value: 0)
+                event.setIntegerValueField(.scrollWheelEventIsContinuous, value: 1)
+                event.setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: Int64(round(nsEvent!.deltaZ)))
+                event.setIntegerValueField(.scrollWheelEventPointDeltaAxis2, value: 0)
+                event.flags = .maskCommand
             }
         }
         
