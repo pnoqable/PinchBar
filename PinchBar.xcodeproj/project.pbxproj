@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8403F28B27FF191600CAAC3C /* EventTap.swift */; };
 		8459492227FA287800DBB447 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8459492127FA287800DBB447 /* AppDelegate.swift */; };
 		8459492427FA287C00DBB447 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8459492327FA287C00DBB447 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		8403F28B27FF191600CAAC3C /* EventTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTap.swift; sourceTree = "<group>"; };
 		8459491E27FA287800DBB447 /* PinchBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PinchBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8459492127FA287800DBB447 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8459492327FA287C00DBB447 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -50,6 +52,7 @@
 			children = (
 				8459492127FA287800DBB447 /* AppDelegate.swift */,
 				8459492327FA287C00DBB447 /* Assets.xcassets */,
+				8403F28B27FF191600CAAC3C /* EventTap.swift */,
 				8459492E27FA28A100DBB447 /* Info.plist */,
 			);
 			path = PinchBar;
@@ -123,6 +126,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */,
 				8459492227FA287800DBB447 /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -184,7 +188,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "© Lutz Häußler";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -242,7 +246,7 @@
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "© Lutz Häußler";
 				INFOPLIST_KEY_NSPrincipalClass = NSApplication;
-				MACOSX_DEPLOYMENT_TARGET = 10.12;
+				MACOSX_DEPLOYMENT_TARGET = 10.13;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = macosx;
