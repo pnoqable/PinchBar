@@ -6,9 +6,10 @@ import Cocoa
     var menuItemConfigure: NSMenuItem!
     
     let eventTap = EventTap()
+    let repository = Repository()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        NSLog("Enabled for: \(eventTap.apps.keys)")
+        NSLog("PinchBar \(repository.version), enabled for: \(eventTap.apps.keys)")
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(named: "StatusIcon")
@@ -18,10 +19,16 @@ import Cocoa
         statusItem.menu?.autoenablesItems = false
         
         let menuItemAbout = NSMenuItem()
-        menuItemAbout.title = "About PinchBar"
+        menuItemAbout.title = "About PinchBar " + repository.version
         menuItemAbout.target = self
         menuItemAbout.action = #selector(openGitHub)
         statusItem.menu?.addItem(menuItemAbout)
+        
+        let menuItemUpdate = NSMenuItem()
+        menuItemUpdate.title = "Check for Updates..."
+        menuItemUpdate.target = self
+        menuItemUpdate.action = #selector(checkForUpdates)
+        statusItem.menu?.addItem(menuItemUpdate)
         
         statusItem.menu?.addItem(NSMenuItem.separator())
         
@@ -48,6 +55,9 @@ import Cocoa
         
         eventTap.delegate = self
         eventTap.start()
+        
+        repository.openUpdateLink = openGitHub
+        repository.checkForUpdates(verbose: false)
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -58,6 +68,10 @@ import Cocoa
     @objc func openGitHub() {
         let url = "https://github.com/pnoqable/PinchBar"
         NSWorkspace.shared.open(URL(string: url)!)
+    }
+    
+    @objc func checkForUpdates() {
+        repository.checkForUpdates(verbose: true)
     }
     
     @objc func accessibility() {

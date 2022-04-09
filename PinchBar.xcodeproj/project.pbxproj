@@ -10,6 +10,7 @@
 		8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8403F28B27FF191600CAAC3C /* EventTap.swift */; };
 		8459492227FA287800DBB447 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8459492127FA287800DBB447 /* AppDelegate.swift */; };
 		8459492427FA287C00DBB447 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8459492327FA287C00DBB447 /* Assets.xcassets */; };
+		846AF3CC2804F5FC00B3E06F /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846AF3CB2804F5FC00B3E06F /* Repository.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -18,6 +19,7 @@
 		8459492127FA287800DBB447 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8459492327FA287C00DBB447 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8459492E27FA28A100DBB447 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		846AF3CB2804F5FC00B3E06F /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -54,6 +56,7 @@
 				8459492327FA287C00DBB447 /* Assets.xcassets */,
 				8403F28B27FF191600CAAC3C /* EventTap.swift */,
 				8459492E27FA28A100DBB447 /* Info.plist */,
+				846AF3CB2804F5FC00B3E06F /* Repository.swift */,
 			);
 			path = PinchBar;
 			sourceTree = "<group>";
@@ -126,6 +129,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				846AF3CC2804F5FC00B3E06F /* Repository.swift in Sources */,
 				8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */,
 				8459492227FA287800DBB447 /* AppDelegate.swift in Sources */,
 			);
