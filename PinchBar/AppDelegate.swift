@@ -9,7 +9,7 @@ import Cocoa
     let repository = Repository()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        NSLog("PinchBar \(repository.version), enabled for: \(eventTap.apps.keys)")
+        NSLog("PinchBar \(repository.version), enabled for: \(eventTap.appSettings.keys)")
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(named: "StatusIcon")

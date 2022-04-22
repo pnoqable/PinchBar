@@ -10,16 +10,36 @@ class EventTap {
     
     private var eventTap: CFMachPort?
     
-    private(set) var apps: [String:Bool] = ["Cubase":true]
+    struct EventMapping: Codable {
+        var rawFlags: CGEventFlags.RawValue
+        var flags: CGEventFlags { CGEventFlags(rawValue: rawFlags) }
+        var sensivity: Double
+        static let defaults = EventMapping(rawFlags: CGEventFlags.maskCommand.rawValue, sensivity: 100)
+        static let highSens = EventMapping(rawFlags: CGEventFlags.maskCommand.rawValue, sensivity: 250)
+    }
+    
+    struct AppSettings: Codable {
+        var eventMap: [CGEventFlags.RawValue: EventMapping]
+        static let defaults = AppSettings(eventMap: [0: .defaults, CGEventFlags.maskShift.rawValue: .highSens])
+    }
+    
+    private(set) var appSettings: [String: AppSettings] = ["Cubase": .defaults]
     private(set) var currentApp: String = EventTap.unknownApp
-    private(set) var isEnabled: Bool = false
+    private      var currentSettings: AppSettings?
+    
+    var isEnabled: Bool { currentSettings != nil }
     
     weak var delegate: EventTapDelegate?
     
     init() {
-        UserDefaults.standard.register(defaults: ["apps":apps])
-        if let apps = UserDefaults.standard.object(forKey: "apps") as? [String:Bool] {
-            self.apps = apps
+        if let settingsString = try? String(data: JSONEncoder().encode(appSettings), encoding: .utf8) {
+            UserDefaults.standard.register(defaults: ["appSettings": settingsString])
+        }
+        
+        if let string = UserDefaults.standard.object(forKey: "appSettings") as? String,
+           let data = string.data(using: .utf8),
+           let settings = try? JSONDecoder().decode([String: AppSettings].self, from: data) {
+            self.appSettings = settings
         }
         
         NSWorkspace.shared.notificationCenter
@@ -54,40 +74,57 @@ class EventTap {
     }
     
     func toggleApp() {
-        if apps.keys.contains(currentApp) {
-            apps.removeValue(forKey: currentApp)
+        if appSettings.keys.contains(currentApp) {
+            appSettings.removeValue(forKey: currentApp)
         } else {
-            apps[currentApp] = true
+            appSettings[currentApp] = AppSettings.defaults
         }
         
-        UserDefaults.standard.set(apps, forKey: "apps")
+        if let settingsData = try? String(data: JSONEncoder().encode(appSettings), encoding: .utf8) {
+            UserDefaults.standard.set(settingsData, forKey: "appSettings")
+        }
         
         updateTap()
     }
     
     @objc private func updateTap() {
         currentApp = NSWorkspace.shared.frontmostApplication?.localizedName ?? EventTap.unknownApp
-        isEnabled = apps.keys.contains(currentApp)
+        currentSettings = appSettings[currentApp]
         
         if let eventTap = eventTap {
             if isEnabled != CGEvent.tapIsEnabled(tap: eventTap) {
                 CGEvent.tapEnable(tap: eventTap, enable: isEnabled)
             }
         } else {
-            isEnabled = false
+            currentSettings = nil
         }
         
         delegate?.eventTapUpdated(self)
     }
     
+    let modifierMask = UInt64.max << 8  // masks out left/right hints of modifier keys flags
+    var remainder: Double = 0           // subpixel residue of sent (integer) scroll events
+    
+    private let field110 = CGEventField(rawValue: 110)! // type
+    private let field113 = CGEventField(rawValue: 113)! // magnification
+    private let field132 = CGEventField(rawValue: 132)! // phase
     private func tap(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             updateTap()
-        } else if let nsEvent = NSEvent.init(cgEvent: event), nsEvent.type == .magnify {
-            let amount = Int32(round(nsEvent.deltaZ))
-            let newEvent = CGEvent.init(scrollWheelEvent2Source: nil, units: .pixel,
-                                        wheelCount: 1, wheel1: amount, wheel2: 0, wheel3: 0)!
-            newEvent.flags = .maskCommand
+        } else if event.getDoubleValueField(field110) == 8, // type == Magnify
+                  let mapping = currentSettings?.eventMap[event.flags.rawValue & modifierMask] {
+            
+            if event.getDoubleValueField(field132) == 1 { // phase == Began
+                remainder = 0
+            }
+            
+            let magnification = event.getDoubleValueField(field113)
+            let amount = mapping.sensivity * magnification + remainder
+            let wheel = round(amount)
+            remainder = amount - wheel
+            let newEvent = CGEvent(scrollWheelEvent2Source: nil, units: .pixel,
+                                   wheelCount: 1, wheel1: Int32(wheel), wheel2: 0, wheel3: 0)!
+            newEvent.flags = mapping.flags
             return Unmanaged.passRetained(newEvent)
         }
         
