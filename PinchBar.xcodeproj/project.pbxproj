@@ -20,6 +20,8 @@
 		8459492327FA287C00DBB447 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8459492E27FA28A100DBB447 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		846AF3CB2804F5FC00B3E06F /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
+		84A304C828C686C70087F4F6 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		84D7DA58290085BF0013E257 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,6 +39,8 @@
 			isa = PBXGroup;
 			children = (
 				8459492027FA287800DBB447 /* PinchBar */,
+				84D7DA58290085BF0013E257 /* LICENSE.md */,
+				84A304C828C686C70087F4F6 /* README.md */,
 				8459491F27FA287800DBB447 /* Products */,
 			);
 			sourceTree = "<group>";
