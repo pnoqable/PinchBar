@@ -14,16 +14,22 @@ class EventTap {
         var rawFlags: CGEventFlags.RawValue
         var flags: CGEventFlags { CGEventFlags(rawValue: rawFlags) }
         var sensivity: Double
-        static let defaults = EventMapping(rawFlags: CGEventFlags.maskCommand.rawValue, sensivity: 100)
-        static let highSens = EventMapping(rawFlags: CGEventFlags.maskCommand.rawValue, sensivity: 250)
+        var keyA, keyB: CGKeyCode?
+        static let cmdMinusPlus = EventMapping(rawFlags: CGEventFlags.maskCommand.rawValue, sensivity: 2, keyA: 44, keyB: 30)
+        static let cmdWheel = EventMapping(rawFlags: CGEventFlags.maskCommand.rawValue, sensivity: 100)
+        static let altGH = EventMapping(rawFlags: CGEventFlags.maskAlternate.rawValue, sensivity: 2, keyA: 5, keyB: 4)
+        static let shiftGH = EventMapping(rawFlags: CGEventFlags.maskShift.rawValue, sensivity: 2, keyA: 5, keyB: 4)
     }
     
     struct AppSettings: Codable {
         var eventMap: [CGEventFlags.RawValue: EventMapping]
-        static let defaults = AppSettings(eventMap: [0: .defaults, CGEventFlags.maskShift.rawValue: .highSens])
+        static let defaults = AppSettings(eventMap:[0: .cmdMinusPlus])
+        static let cubase = AppSettings(eventMap: [0: .cmdWheel,
+                                                   CGEventFlags.maskAlternate.rawValue: .altGH,
+                                                   CGEventFlags.maskCommand.rawValue: .shiftGH])
     }
     
-    private(set) var appSettings: [String: AppSettings] = ["Cubase": .defaults]
+    private(set) var appSettings: [String: AppSettings] = ["Cubase": .cubase]
     private(set) var currentApp: String = EventTap.unknownApp
     private      var currentSettings: AppSettings?
     
@@ -48,9 +54,9 @@ class EventTap {
     }
     
     func start() {
-        let adapter: CGEventTapCallBack = { _, type, event, userInfo in
+        let adapter: CGEventTapCallBack = { proxy, type, event, userInfo in
             let mySelf = Unmanaged<EventTap>.fromOpaque(userInfo!).takeUnretainedValue()
-            return mySelf.tap(type: type, event: event)
+            return mySelf.tap(proxy: proxy, type: type, event: event)
         }
         
         let mySelf = Unmanaged.passUnretained(self).toOpaque()
@@ -108,7 +114,7 @@ class EventTap {
     private let field110 = CGEventField(rawValue: 110)! // type
     private let field113 = CGEventField(rawValue: 113)! // magnification
     private let field132 = CGEventField(rawValue: 132)! // phase
-    private func tap(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+    private func tap(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout || type == .tapDisabledByUserInput {
             updateTap()
         } else if event.getDoubleValueField(field110) == 8, // type == Magnify
@@ -122,6 +128,25 @@ class EventTap {
             let amount = mapping.sensivity * magnification + remainder
             let wheel = round(amount)
             remainder = amount - wheel
+            
+            func post(_ key: CGKeyCode, down: Bool, withFlags: CGEventFlags) {
+                let event = CGEvent(keyboardEventSource: nil, virtualKey: key, keyDown: down)!
+                event.flags = withFlags
+                event.tapPostEvent(proxy)
+            }
+            
+            if wheel <= -1, let key = mapping.keyA {
+                post(key, down: true, withFlags: mapping.flags)
+                post(key, down: false, withFlags: mapping.flags)
+                return nil
+            }
+            
+            if wheel >= 1, let key = mapping.keyB {
+                post(key, down: true, withFlags: mapping.flags)
+                post(key, down: false, withFlags: mapping.flags)
+                return nil
+            }
+            
             let newEvent = CGEvent(scrollWheelEvent2Source: nil, units: .pixel,
                                    wheelCount: 1, wheel1: Int32(wheel), wheel2: 0, wheel3: 0)!
             newEvent.flags = mapping.flags
