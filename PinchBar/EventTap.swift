@@ -18,7 +18,7 @@ class EventTap {
         eventTap = CGEvent.tapCreate(tap: .cghidEventTap,
                                      place: .headInsertEventTap,
                                      options: .defaultTap,
-                                     eventsOfInterest:  1<<29, // trackpad events only
+                                     eventsOfInterest:  1<<29 | 1<<22, // trackpad and scroll events
                                      callback: adapter,
                                      userInfo: mySelf)
         
@@ -36,6 +36,14 @@ class EventTap {
             CGEvent.tapEnable(tap: eventTap!, enable: true)
         } else if EventMapping.canTap(event), let mapping = preset?[event.flags.purified] {
             return mapping.tap(event, proxy: proxy)
+        }
+        
+        if event.type == .scrollWheel,
+           event.flags.isSuperset(of: .init(arrayLiteral: .maskCommand, .maskAlternate)) {
+            return event.scrollPhase == .other ? nil : // -> discard maybegin, momentum phase, ...
+                .passRetained(CGEvent(magnifyEventSource: nil,
+                                      magnification: 0.005 * Double(event.scrollPointDeltaAxis1),
+                                      phase: event.scrollPhase)?.withFlags(flags: .maskNoFlags))
         }
         
         return .passUnretained(event)

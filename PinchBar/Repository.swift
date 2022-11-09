@@ -8,8 +8,8 @@ class Repository {
     }
     
     func checkForUpdates(verbose: Bool) {
-        let url = "https://api.github.com/repos/pnoqable/PinchBar/releases/latest"
-        URLSession(configuration: .ephemeral).dataTask(with: URL(string: url)!) { data, _, error in
+        let url = URL(string: "https://api.github.com/repos/pnoqable/PinchBar/releases/latest")!
+        URLSession(configuration: .ephemeral).dataTask(with: url) { data, _, error in
             self.checkUpdate(data: data, error: error, verbose: verbose)
         }.resume()
     }

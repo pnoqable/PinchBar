@@ -10,21 +10,20 @@ struct EventMapping: Codable {
     var flags: CGEventFlags
     var sensivity: Double
     
-    static func canTap(_ event: CGEvent) -> Bool { event.subtype == .magnification }
+    static func canTap(_ event: CGEvent) -> Bool { event.subtype == .magnify }
     
     private static var remainder: Double = 0 // subpixel residue of sent (integer) scroll events
     
     func tap(_ event: CGEvent, proxy: CGEventTapProxy) -> Unmanaged<CGEvent>? {
-        assert(event.subtype == .magnification)
+        assert(event.subtype == .magnify)
         
         // when event is not to be replaced, just apply flags and sensivity:
         guard let replacement = replaceWith else {
-            event.flags = flags
             event.magnification *= sensivity
-            return .passUnretained(event)
+            return .passUnretained(event.withFlags(flags: flags))
         }
         
-        if event.phase == .began {
+        if event.magnificationPhase == .began {
             Self.remainder = 0
         }
         
@@ -36,10 +35,9 @@ struct EventMapping: Codable {
             
         switch replacement {
         case .wheel:
-            let event = CGEvent(scrollWheelEvent2Source: nil, units: .pixel,
-                                wheelCount: 1, wheel1: Int32(steps), wheel2: 0, wheel3: 0)!
-            event.flags = flags
-            return .passRetained(event)
+            return .passRetained(CGEvent(scrollWheelEvent2Source: nil, units: .pixel,
+                                         wheelCount: 1, wheel1: Int32(steps), wheel2: 0,
+                                         wheel3: 0)?.withFlags(flags: flags))
         case .keys(let codeA, let codeB):
             let code = steps < 0 ? codeA : codeB
             sendKey(code, down: true, proxy: proxy)
@@ -49,9 +47,8 @@ struct EventMapping: Codable {
     }
     
     private func sendKey(_ code: CGKeyCode, down: Bool, proxy: CGEventTapProxy) {
-        let event = CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down)!
-        event.flags = flags
-        event.tapPostEvent(proxy)
+        CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down)?
+            .withFlags(flags: flags).tapPostEvent(proxy)
     }
 }
 
