@@ -1,15 +1,20 @@
 import Cocoa
 
+private let unknownApp: String = "unknown Application"
+
 @main class AppDelegate: NSObject, NSApplicationDelegate, EventTapDelegate {
+    var activeApp: String = unknownApp
+
     var statusItem: NSStatusItem!
     var menuItemPreferences: NSMenuItem!
     var menuItemConfigure: NSMenuItem!
     
     let eventTap = EventTap()
     let repository = Repository()
+    let settings = Settings()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        NSLog("PinchBar \(repository.version), enabled for: \(eventTap.appSettings.keys)")
+        NSLog("PinchBar \(repository.version), enabled for: \(settings.apps.keys)")
         
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(named: "StatusIcon")
@@ -39,7 +44,7 @@ import Cocoa
         statusItem.menu?.addItem(menuItemPreferences)
         
         menuItemConfigure = NSMenuItem()
-        menuItemConfigure.title = "Enable for " + eventTap.currentApp
+        menuItemConfigure.title = "Enable for " + activeApp
         menuItemConfigure.target = self
         menuItemConfigure.action = #selector(configure)
         menuItemConfigure.isEnabled = false
@@ -58,6 +63,12 @@ import Cocoa
         
         repository.openUpdateLink = openGitHub
         repository.checkForUpdates(verbose: false)
+        
+        NSWorkspace.shared.notificationCenter
+            .addObserver(self, selector: #selector(updateEventTap),
+                         name: NSWorkspace.didActivateApplicationNotification, object: nil)
+        
+        updateEventTap()
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
@@ -80,7 +91,12 @@ import Cocoa
     }
     
     @objc func configure() {
-        eventTap.toggleApp()
+        if settings.apps.removeValue(forKey: activeApp) == nil {
+            settings.apps[activeApp] = "Common"
+        }
+        
+        settings.save()
+        updateEventTap()
     }
     
     func eventTapCreated(_: EventTap) {
@@ -89,9 +105,12 @@ import Cocoa
         menuItemConfigure.isEnabled = true
     }
     
-    func eventTapUpdated(_ eventTap: EventTap) {
+    @objc func updateEventTap() {
+        activeApp = NSWorkspace.shared.frontmostApplication?.localizedName ?? unknownApp
+        eventTap.preset = settings.preset(for: activeApp)
+        
         statusItem.button?.appearsDisabled = !eventTap.isEnabled
-        menuItemConfigure.title = "Enable for " + eventTap.currentApp
+        menuItemConfigure.title = "Enable for " + activeApp
         menuItemConfigure.state = eventTap.isEnabled ? .on : .off
     }
     
