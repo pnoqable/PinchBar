@@ -1,5 +1,7 @@
 import Cocoa
 
+typealias Callback = () -> ()
+
 extension CGEventFlags: Codable, Hashable {
     static let maskNoFlags = Self([])
     
@@ -47,5 +49,25 @@ extension Dictionary {
     }
     func compactMapKeys<T>(_ transform: (Key) throws -> T?) rethrows -> [T: Value] {
         try .init(uniqueKeysWithValues: compactMap{ (k, v) in try transform(k).map{ t in (t, v) } })
+    }
+}
+
+extension NSMenuItem {
+    static private var assotiationKey = "callback"
+    
+    var callback: Callback? {
+        get { objc_getAssociatedObject(self, &Self.assotiationKey) as? Callback }
+        set { objc_setAssociatedObject(self, &Self.assotiationKey, newValue, .OBJC_ASSOCIATION_RETAIN) }
+    }
+    
+    convenience init(title: String, isChecked: Bool = false, callback: @escaping Callback) {
+        self.init(title: title, action: #selector(callback(sender:)), keyEquivalent: "")
+        self.callback = callback
+        self.target = self
+        self.state = isChecked ? .on : .off
+    }
+    
+    @objc private func callback(sender: Any) {
+        callback?()
     }
 }

@@ -1,17 +1,11 @@
 import Cocoa
 
-protocol EventTapDelegate: AnyObject {
-    func eventTapCreated(_ eventTap: EventTap)
-}
-
 class EventTap {
     private var eventTap: CFMachPort?
     
     var preset: Settings.Preset?
     
-    var isEnabled: Bool { preset != nil }
-    
-    weak var delegate: EventTapDelegate?
+    var callWhenCreated: Callback?
     
     func start() {
         let adapter: CGEventTapCallBack = { proxy, type, event, userInfo in
@@ -34,7 +28,7 @@ class EventTap {
         
         let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
-        delegate?.eventTapCreated(self)
+        callWhenCreated?()
     }
     
     private func tap(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {

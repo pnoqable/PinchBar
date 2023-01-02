@@ -3,7 +3,9 @@ import Cocoa
 class Repository {
     let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
     
-    var openUpdateLink: (()->())?
+    func openGitHub() {
+        NSWorkspace.shared.open(URL(string: "https://github.com/pnoqable/PinchBar")!)
+    }
     
     func checkForUpdates(verbose: Bool) {
         let url = "https://api.github.com/repos/pnoqable/PinchBar/releases/latest"
@@ -49,7 +51,7 @@ class Repository {
         NSApplication.shared.activate(ignoringOtherApps: true)
         
         if alert.runModal() == .alertFirstButtonReturn {
-            openUpdateLink?()
+            openGitHub()
         }
         
         if alert.suppressionButton?.state == .on {
