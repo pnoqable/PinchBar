@@ -18,7 +18,7 @@ class EventTap {
         eventTap = CGEvent.tapCreate(tap: .cghidEventTap,
                                      place: .headInsertEventTap,
                                      options: .defaultTap,
-                                     eventsOfInterest:  1<<29,
+                                     eventsOfInterest:  1<<29, // trackpad events only
                                      callback: adapter,
                                      userInfo: mySelf)
         
