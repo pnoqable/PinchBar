@@ -1,98 +1,50 @@
 import Cocoa
 
-@main class AppDelegate: NSObject, NSApplicationDelegate, EventTapDelegate {
-    var statusItem: NSStatusItem!
-    var menuItemPreferences: NSMenuItem!
-    var menuItemConfigure: NSMenuItem!
+private let unknownApp: String = "unknown Application"
+
+@main class AppDelegate: NSObject, NSApplicationDelegate {
+    var activeApp: String = unknownApp
     
     let eventTap = EventTap()
     let repository = Repository()
+    let settings = Settings()
+    
+    let statusMenu = StatusMenu()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        NSLog("PinchBar \(repository.version), enabled for: \(eventTap.apps.keys)")
+        NSLog("PinchBar \(repository.version), configured for: \(settings.appNames)")
         
-        statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(named: "StatusIcon")
-        statusItem.button?.toolTip = "PinchBar"
-        statusItem.behavior = .removalAllowed
-        statusItem.menu = NSMenu()
-        statusItem.menu?.autoenablesItems = false
+        statusMenu.callWhenPresetSelected = { [weak self] p in self?.changePreset(to: p) }
+        statusMenu.create(repository: repository, settings: settings)
         
-        let menuItemAbout = NSMenuItem()
-        menuItemAbout.title = "About PinchBar " + repository.version
-        menuItemAbout.target = self
-        menuItemAbout.action = #selector(openGitHub)
-        statusItem.menu?.addItem(menuItemAbout)
-        
-        let menuItemUpdate = NSMenuItem()
-        menuItemUpdate.title = "Check for Updates..."
-        menuItemUpdate.target = self
-        menuItemUpdate.action = #selector(checkForUpdates)
-        statusItem.menu?.addItem(menuItemUpdate)
-        
-        statusItem.menu?.addItem(NSMenuItem.separator())
-        
-        menuItemPreferences = NSMenuItem()
-        menuItemPreferences.title = "Enable Pinchbar in Accessibility"
-        menuItemPreferences.target = self
-        menuItemPreferences.action = #selector(accessibility)
-        statusItem.menu?.addItem(menuItemPreferences)
-        
-        menuItemConfigure = NSMenuItem()
-        menuItemConfigure.title = "Enable for " + eventTap.currentApp
-        menuItemConfigure.target = self
-        menuItemConfigure.action = #selector(configure)
-        menuItemConfigure.isEnabled = false
-        statusItem.menu?.addItem(menuItemConfigure)
-        
-        statusItem.menu?.addItem(NSMenuItem.separator())
-        
-        let menuItemQuit = NSMenuItem()
-        menuItemQuit.title = "Quit"
-        menuItemQuit.target = NSApplication.shared
-        menuItemQuit.action = #selector(NSApplication.stop)
-        statusItem.menu?.addItem(menuItemQuit)
-        
-        eventTap.delegate = self
+        eventTap.callWhenCreated = { [weak statusMenu] in statusMenu?.enableSubmenu() }
         eventTap.start()
         
-        repository.openUpdateLink = openGitHub
         repository.checkForUpdates(verbose: false)
+        
+        NSWorkspace.shared.notificationCenter
+            .addObserver(self, selector: #selector(activeAppChanged),
+                         name: NSWorkspace.didActivateApplicationNotification, object: nil)
+        
+        activeAppChanged()
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        statusItem.isVisible = true
+        statusMenu.statusItem.isVisible = true
         return true
     }
     
-    @objc func openGitHub() {
-        let url = "https://github.com/pnoqable/PinchBar"
-        NSWorkspace.shared.open(URL(string: url)!)
+    @objc func activeAppChanged() {
+        activeApp = NSWorkspace.shared.frontmostApplication?.localizedName ?? unknownApp
+        changePreset(to: settings.appPresets[activeApp])
     }
     
-    @objc func checkForUpdates() {
-        repository.checkForUpdates(verbose: true)
-    }
-    
-    @objc func accessibility() {
-        let url = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-        NSWorkspace.shared.open(URL(string: url)!)
-    }
-    
-    @objc func configure() {
-        eventTap.toggleApp()
-    }
-    
-    func eventTapCreated(_: EventTap) {
-        menuItemPreferences.state = .on
-        menuItemPreferences.isEnabled = false
-        menuItemConfigure.isEnabled = true
-    }
-    
-    func eventTapUpdated(_ eventTap: EventTap) {
-        statusItem.button?.appearsDisabled = !eventTap.isEnabled
-        menuItemConfigure.title = "Enable for " + eventTap.currentApp
-        menuItemConfigure.state = eventTap.isEnabled ? .on : .off
+    func changePreset(to newPreset: String?) {
+        settings.appPresets[activeApp] = newPreset
+        settings.save()
+        
+        eventTap.preset = settings.preset(named: newPreset)
+        statusMenu.updateSubmenu(activeApp: activeApp, activePreset: newPreset)
     }
     
     static func main() {
