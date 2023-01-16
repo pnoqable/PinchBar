@@ -10,12 +10,12 @@ struct EventMapping: Codable {
     var flags: CGEventFlags
     var sensivity: Double
     
-    func canTap(_ event: CGEvent) -> Bool { event.subType == .magnification }
+    static func canTap(_ event: CGEvent) -> Bool { event.subtype == .magnification }
     
     private static var remainder: Double = 0 // subpixel residue of sent (integer) scroll events
     
     func tap(_ event: CGEvent, proxy: CGEventTapProxy) -> Unmanaged<CGEvent>? {
-        assert(event.subType == .magnification)
+        assert(event.subtype == .magnification)
         
         // when event is not to be replaced, just apply flags and sensivity:
         guard let replacement = replaceWith else {

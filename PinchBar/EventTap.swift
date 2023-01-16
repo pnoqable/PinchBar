@@ -34,7 +34,7 @@ class EventTap {
     private func tap(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout {
             CGEvent.tapEnable(tap: eventTap!, enable: true)
-        } else if let mapping = preset?[event.flags.purified], mapping.canTap(event) {
+        } else if EventMapping.canTap(event), let mapping = preset?[event.flags.purified] {
             return mapping.tap(event, proxy: proxy)
         }
         

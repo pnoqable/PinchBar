@@ -17,13 +17,13 @@ extension CGEventFlags: Codable, Hashable {
 }
 
 extension CGEventField: Codable {
-    static let subType = Self(rawValue: 110)!
+    static let subtype = Self(rawValue: 110)!
     static let magnification = Self(rawValue: 113)!
     static let phase = Self(rawValue: 132)!
 }
 
 extension CGEvent {
-    enum SubType: Int64 {
+    enum Subtype: Int64 {
         case magnification = 8
         case other
     }
@@ -33,7 +33,7 @@ extension CGEvent {
         case other
     }
     
-    var subType: SubType { SubType(rawValue: getIntegerValueField(.subType)) ?? .other }
+    var subtype: Subtype { Subtype(rawValue: getIntegerValueField(.subtype)) ?? .other }
     
     var magnification: Double {
         get { getDoubleValueField(.magnification) }
