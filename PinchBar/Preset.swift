@@ -21,7 +21,7 @@ extension Preset: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let plist = try container.decode([String: EventMapping].self)
-        self.init(mappings: plist.compactMapKeys(CGEventFlags.init))
+        self.init(mappings: plist.compactMapKeys { str in UInt64(str).flatMap(CGEventFlags.init) })
     }
     
     func encode(to encoder: Encoder) throws {

@@ -7,7 +7,7 @@ class Settings {
     var appNames: [String] { appPresets.keys.sorted() }
     var presetNames: [String] { presets.keys.sorted() }
     
-    func preset(named name: String?) -> Preset? { name.flatMap{ name in presets[name] } }
+    func preset(named name: String?) -> Preset? { name.flatMap { name in presets[name] } }
     
     init() {
         if let dict = UserDefaults.standard.dictionary(forKey: "presets"),
