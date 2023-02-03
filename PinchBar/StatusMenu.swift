@@ -69,7 +69,7 @@ class StatusMenu {
             [weak self] in self?.callWhenPresetSelected?(nil)
         })
         
-        statusItem.button?.appearsDisabled = activePreset == nil
+        statusItem.button?.appearsDisabled = activePreset == nil || menuItemPreferences.isEnabled
         menuItemConfigure.title = "Change Preset for " + activeApp
         menuItemConfigure.submenu = submenu
     }
