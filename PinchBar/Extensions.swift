@@ -2,6 +2,12 @@ import Cocoa
 
 typealias Callback = () -> ()
 
+extension CGEventField: Codable {
+    static let subtype = Self(rawValue: 110)!
+    static let magnification = Self(rawValue: 113)!
+    static let magnificationPhase = Self(rawValue: 132)!
+}
+
 extension CGEventFlags: Codable, Hashable {
     static let maskNoFlags = Self([])
     
@@ -11,10 +17,10 @@ extension CGEventFlags: Codable, Hashable {
     var purified: Self { Self(rawValue: rawValue & Self.pureKeyMask) }
 }
 
-extension CGEventField: Codable {
-    static let subtype = Self(rawValue: 110)!
-    static let magnification = Self(rawValue: 113)!
-    static let magnificationPhase = Self(rawValue: 132)!
+extension CGEventType: Comparable {
+    public static func < (lhs: CGEventType, rhs: CGEventType) -> Bool {
+        lhs.rawValue < rhs.rawValue
+    }
 }
 
 extension CGEvent {
