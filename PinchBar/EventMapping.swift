@@ -14,13 +14,13 @@ struct EventMapping: Codable {
     
     private static var remainder: Double = 0 // subpixel residue of sent (integer) scroll events
     
-    func tap(_ event: CGEvent, proxy: CGEventTapProxy) -> Unmanaged<CGEvent>? {
+    func tap(_ event: CGEvent) -> [CGEvent] {
         assert(event.subtype == .magnify)
         
         // when event is not to be replaced, just apply flags and sensivity:
         guard let replacement = replaceWith else {
             event.magnification *= sensivity
-            return .passUnretained(event.withFlags(flags: flags))
+            return [event.with(flags: flags)]
         }
         
         if event.magnificationPhase == .began {
@@ -31,24 +31,18 @@ struct EventMapping: Codable {
         let steps = round(magnification)
         Self.remainder = magnification - steps
         
-        guard steps != 0 else { return nil }
+        guard steps != 0 else { return [] }
             
         switch replacement {
         case .wheel:
-            return .passRetained(CGEvent(scrollWheelEvent2Source: nil, units: .pixel,
-                                         wheelCount: 1, wheel1: Int32(steps), wheel2: 0,
-                                         wheel3: 0)?.withFlags(flags: flags))
+            return [CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
+                            wheel1: Int32(steps), wheel2: 0, wheel3: 0)!.with(flags: flags)]
         case .keys(let codeA, let codeB):
             let code = steps < 0 ? codeA : codeB
-            sendKey(code, down: true, proxy: proxy)
-            sendKey(code, down: false, proxy: proxy)
-            return nil
+            return [CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: true)!,
+                    CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: false)!]
+                .map { $0.with(flags: flags) }
         }
-    }
-    
-    private func sendKey(_ code: CGKeyCode, down: Bool, proxy: CGEventTapProxy) {
-        CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: down)?
-            .withFlags(flags: flags).tapPostEvent(proxy)
     }
 }
 
