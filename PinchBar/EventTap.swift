@@ -7,14 +7,23 @@ class EventTap {
     var preset: Preset?
     
     func start() {
+        let eventMask = CGEventMask(1<<29 | 1<<22 | 0b11110) // trackpad, scroll and click events
+        
         let adapter: CGEventTapCallBack = { proxy, type, event, userInfo in
             let mySelf = Unmanaged<EventTap>.fromOpaque(userInfo!).takeUnretainedValue()
-            return mySelf.tap(proxy: proxy, type: type, event: event)
+            
+            if type == .tapDisabledByTimeout {
+                CGEvent.tapEnable(tap: mySelf.eventTap!, enable: true)
+            } else {
+                for tappedEvent in mySelf.tap(event) {
+                    tappedEvent.tapPostEvent(proxy)
+                }
+            }
+            
+            return nil
         }
         
         let mySelf = Unmanaged.passUnretained(self).toOpaque()
-        
-        let eventMask = CGEventMask(1<<29 | 1<<22 | 0b11110) // trackpad, scroll and click events
         
         eventTap = CGEvent.tapCreate(tap: .cghidEventTap,
                                      place: .headInsertEventTap,
@@ -39,26 +48,17 @@ class EventTap {
     var mapScrollToPinch = MapScrollToPinchState()
     var isMappingMultitouchClick = false
     
-    private func tap(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
-        if type == .tapDisabledByTimeout {
-            CGEvent.tapEnable(tap: eventTap!, enable: true)
-        }
-        
+    private func tap(_ event: CGEvent) -> [CGEvent] {
         if event.type == .scrollWheel {
             let transition = mapScrollToPinch.feed(event)
             
             if mapScrollToPinch.state == .mapping || transition == .finishMapping {
-                guard event.scrollPhase != .other else { return nil }
-                return .passRetained(
-                    CGEvent(magnifyEventSource: nil,
-                            magnification: 0.005 * Double(event.scrollPointDeltaAxis1),
-                            phase: event.scrollPhase)?.withFlags(flags: event.flags))
-                .flatMap { result in
-                    let result = result.takeUnretainedValue()
-                    return tap(proxy: proxy, type: result.type, event: result)
-                }
+                guard event.scrollPhase != .other else { return [] }
+                return tap(CGEvent(magnifyEventSource: nil,
+                                   magnification: 0.005 * Double(event.scrollPointDeltaAxis1),
+                                   phase: event.scrollPhase)!.with(flags: event.flags))
             } else if mapScrollToPinch.state.isDropState || transition == .finishDropping {
-                return nil
+                return []
             }
         }
         
@@ -78,9 +78,9 @@ class EventTap {
         }
         
         if let mapping = preset?[event] {
-            return mapping.tap(event, proxy: proxy)
+            return mapping.tap(event)
         }
         
-        return .passUnretained(event)
+        return [event]
     }
 }

@@ -70,7 +70,7 @@ extension CGEvent {
         set { setIntegerValueField(.magnificationPhase, value: newValue.rawValue) }
     }
     
-    func withFlags(flags: CGEventFlags) -> CGEvent {
+    func with(flags: CGEventFlags) -> CGEvent {
         self.flags = flags
         return self
     }
@@ -112,16 +112,5 @@ extension NSMenuItem {
     
     @objc private func callback(sender: Any) {
         callback?()
-    }
-}
-
-extension Unmanaged {
-    static func passRetained<T>(_ instance: T?) -> Unmanaged<T>? {
-        guard let instance else { return nil }
-        return .passRetained(instance)
-    }
-    static func passUnretained<T>(_ instance: T?) -> Unmanaged<T>? {
-        guard let instance else { return nil }
-        return .passUnretained(instance)
     }
 }
