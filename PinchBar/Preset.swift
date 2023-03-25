@@ -1,10 +1,10 @@
 import Cocoa
 
-struct Preset {
-    let mappings: [CGEventFlags: EventMapping]
+struct Preset: EventMapping {
+    let mappings: [CGEventFlags: PinchMapping]
     
-    subscript(event: CGEvent) -> EventMapping? {
-        get { EventMapping.canTap(event) ? mappings[event.flags.purified] : nil }
+    func map(_ event: CGEvent) -> [CGEvent] {
+        mappings[event.flags.purified]?.map(event) ?? [event]
     }
     
     static let fontSize = Self(mappings:
@@ -20,7 +20,7 @@ struct Preset {
 extension Preset: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        let plist = try container.decode([String: EventMapping].self)
+        let plist = try container.decode([String: PinchMapping].self)
         self.init(mappings: plist.compactMapKeys { str in UInt64(str).flatMap(CGEventFlags.init) })
     }
     

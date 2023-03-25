@@ -36,15 +36,14 @@ private let unknownApp: String = "unknown Application"
     
     @objc func activeAppChanged() {
         activeApp = NSWorkspace.shared.frontmostApplication?.localizedName ?? unknownApp
-        changePreset(to: settings.appPresets[activeApp])
+        eventTap.mappings = settings.mappings(for: activeApp)
+        statusMenu.updateSubmenu(activeApp: activeApp)
     }
     
     func changePreset(to newPreset: String?) {
         settings.appPresets[activeApp] = newPreset
         settings.save()
-        
-        eventTap.preset = settings.preset(named: newPreset)
-        statusMenu.updateSubmenu(activeApp: activeApp, activePreset: newPreset)
+        activeAppChanged()
     }
     
     static func main() {

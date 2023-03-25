@@ -1,6 +1,60 @@
 import Cocoa
 
-struct EventMapping: Codable {
+protocol EventMapping {
+    func map(_ event: CGEvent) -> [CGEvent]
+}
+
+struct MiddleClickMapping: EventMapping {
+    private static var mapMiddleClick = false
+    
+    var onMousepad: Int
+    var onTrackpad: Int
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.type ∈ .leftMouseDown ... .rightMouseUp {
+            var justFinished = false
+            if event.type ∈ [.leftMouseDown, .rightMouseDown],
+               MultitouchSupportIsTouchCount(Int32(onTrackpad), Int32(onMousepad)) {
+                Self.mapMiddleClick = true
+            } else if Self.mapMiddleClick && event.type ∈ [.leftMouseUp, .rightMouseUp] {
+                Self.mapMiddleClick = false
+                justFinished = true
+            }
+            
+            if Self.mapMiddleClick || justFinished {
+                event.type = event.type ∈ [.leftMouseDown, .rightMouseDown] ? .otherMouseDown : .otherMouseUp
+                event.mouseButtonNumber = 2;
+            }
+        }
+        
+        return [event]
+    }
+}
+
+struct MouseZoomMapping: EventMapping {
+    private static var mapScrollToPinch = MapScrollToPinchState()
+    
+    var sensivity: Double
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.type == .scrollWheel {
+            let transition = Self.mapScrollToPinch.feed(event)
+            
+            if Self.mapScrollToPinch.state == .mapping || transition == .finishMapping {
+                guard event.scrollPhase != .other else { return [] }
+                return [CGEvent(magnifyEventSource: nil,
+                                magnification: sensivity * Double(event.scrollPointDeltaAxis1),
+                                phase: event.scrollPhase)!.with(flags: event.flags)]
+            } else if Self.mapScrollToPinch.state.isDropState || transition == .finishDropping {
+                return []
+            }
+        }
+        
+        return [event]
+    }
+}
+
+struct PinchMapping: EventMapping, Codable {
     enum Replacement: Codable {
         case wheel
         case keys(codeA: CGKeyCode, codeB: CGKeyCode)
@@ -10,12 +64,10 @@ struct EventMapping: Codable {
     var flags: CGEventFlags
     var sensivity: Double
     
-    static func canTap(_ event: CGEvent) -> Bool { event.subtype == .magnify }
-    
     private static var remainder: Double = 0 // subpixel residue of sent (integer) scroll events
     
-    func tap(_ event: CGEvent) -> [CGEvent] {
-        assert(event.subtype == .magnify)
+    func map(_ event: CGEvent) -> [CGEvent] {
+        guard event.subtype == .magnify else { return [event] }
         
         // when event is not to be replaced, just apply flags and sensivity:
         guard let replacement = replaceWith else {
@@ -32,7 +84,7 @@ struct EventMapping: Codable {
         Self.remainder = magnification - steps
         
         guard steps != 0 else { return [] }
-            
+        
         switch replacement {
         case .wheel:
             return [CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
@@ -46,7 +98,7 @@ struct EventMapping: Codable {
     }
 }
 
-extension EventMapping {
+extension PinchMapping {
     static func pinchToPinch(flags: CGEventFlags = .maskNoFlags, sensivity: Double = 1) -> Self {
         Self(replaceWith: nil, flags: flags, sensivity: sensivity)
     }

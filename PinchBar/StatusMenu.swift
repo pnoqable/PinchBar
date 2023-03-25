@@ -52,10 +52,11 @@ class StatusMenu {
         menuItemConfigure.isEnabled = true
     }
     
-    func updateSubmenu(activeApp: String, activePreset: String?) {
+    func updateSubmenu(activeApp: String) {
         guard let settings else { fatalError("called before create") }
         
         let submenu = NSMenu()
+        let activePreset = settings.appPresets[activeApp]
         
         for preset in settings.presetNames {
             submenu.addItem(NSMenuItem(title: preset, isChecked: activePreset == preset) {
