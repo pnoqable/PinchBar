@@ -90,8 +90,14 @@ extension Dictionary {
     func mapKeys<T>(_ transform: (Key) throws -> T) rethrows -> [T: Value] {
         try .init(uniqueKeysWithValues: map { (k, v) in try (transform(k), v) })
     }
+    
     func compactMapKeys<T>(_ transform: (Key) throws -> T?) rethrows -> [T: Value] {
         try .init(uniqueKeysWithValues: compactMap { (k, v) in try transform(k).map { t in (t, v) } })
+    }
+    
+    subscript(key: Key?) -> Value? {
+        get { key.flatMap { self[$0] } }
+        set { key.map     { self[$0] = newValue } }
     }
 }
 
@@ -112,5 +118,11 @@ extension NSMenuItem {
     
     @objc private func callback(sender: Any) {
         callback?()
+    }
+}
+
+extension Optional {
+    var asArray: [Wrapped] {
+        self.map { [$0] } ?? []
     }
 }

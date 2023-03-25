@@ -7,7 +7,12 @@ class Settings {
     var appNames: [String] { appPresets.keys.sorted() }
     var presetNames: [String] { presets.keys.sorted() }
     
-    func preset(named name: String?) -> Preset? { name.flatMap { name in presets[name] } }
+    let globalMappings: [EventMapping] = [MouseZoomMapping(sensivity: 0.005),
+                                          MiddleClickMapping(onMousepad: 2, onTrackpad: 3)]
+    
+    func mappings(for appName: String) -> [EventMapping] {
+        globalMappings + presets[appPresets[appName]].asArray
+    }
     
     init() {
         if let dict = UserDefaults.standard.dictionary(forKey: "presets"),
