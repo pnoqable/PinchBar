@@ -39,8 +39,8 @@ class MapScrollToPinchState: EventStateMachine {
             return .finishMapping
         case let .dropMomentum(since: t) where event.scrollPhase == .began && isShortlyAfter(t):
             state = .dropScroll(since: t)
-        case let .dropMomentum(since: t) where !event.momentumPhase && !isShortlyAfter(t) &&
-            !MultitouchSupportIsTouchCount(-1, 2):
+        case let .dropMomentum(since: t) where !event.momentumPhase && !isShortlyAfter(t)
+            && Multitouch.onMousepad() != 2:
             state = .inactive
         case let .dropScroll(since: t) where event.scrollPhase == .ended:
             state = .dropMomentum(since: t)
@@ -49,7 +49,7 @@ class MapScrollToPinchState: EventStateMachine {
             state = .inactive
             event.scrollPhase = .began
         default:
-            if event.scrollPhase == .began && MultitouchSupportIsTouchCount(-1, 2) {
+            if event.scrollPhase == .began && Multitouch.onMousepad() == 2 {
                 state = .mapping
             }
         }

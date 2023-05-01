@@ -2,13 +2,18 @@ import Cocoa
 
 class Settings {
     var appPresets: [String: String] = ["Cubase": "Cubase"]
-    var presets: [String: Preset] = ["Cubase": .cubase, "Font Size": .fontSize]
+    
+    var presets: [String: Preset] = ["Cubase": .cubase,
+                                     "Font Size": .fontSize,
+                                     "Font Size/cmd": .fontSizeCmd]
     
     var appNames: [String] { appPresets.keys.sorted() }
     var presetNames: [String] { presets.keys.sorted() }
     
     let globalMappings: [EventMapping] = [MouseZoomMapping(sensivity: 0.005),
-                                          MiddleClickMapping(onMousepad: 2, onTrackpad: 3)]
+                                          MiddleClickMapping(onMousepad: 2, onTrackpad: 3),
+                                          MultiTapMapping(oneAndAHalfTapFlags: .maskAlternate,
+                                                          doubleTapFlags:      .maskCommand)]
     
     func mappings(for appName: String) -> [EventMapping] {
         globalMappings + presets[appPresets[appName]].asArray
