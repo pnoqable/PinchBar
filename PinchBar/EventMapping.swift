@@ -14,7 +14,8 @@ struct MiddleClickMapping: EventMapping {
         if event.type ∈ .leftMouseDown ... .rightMouseUp {
             var justFinished = false
             if event.type ∈ [.leftMouseDown, .rightMouseDown],
-               MultitouchSupportIsTouchCount(Int32(onTrackpad), Int32(onMousepad)) {
+               onMousepad > 0 && Multitouch.onMousepad() == onMousepad
+                || onTrackpad > 0 && Multitouch.onTrackpad() == onTrackpad {
                 Self.mapMiddleClick = true
             } else if Self.mapMiddleClick && event.type ∈ [.leftMouseUp, .rightMouseUp] {
                 Self.mapMiddleClick = false
@@ -47,6 +48,23 @@ struct MouseZoomMapping: EventMapping {
                                 phase: event.scrollPhase)!.with(flags: event.flags)]
             } else if Self.mapScrollToPinch.state.isDropState || transition == .finishDropping {
                 return []
+            }
+        }
+        
+        return [event]
+    }
+}
+
+struct MultiTapMapping: EventMapping {
+    var oneAndAHalfTapFlags: CGEventFlags
+    var doubleTapFlags: CGEventFlags
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.subtype == .magnify {
+            if Multitouch.isOneAndAHalfTap() {
+                event.flags = oneAndAHalfTapFlags
+            } else if Multitouch.isDoubleTap() {
+                event.flags = doubleTapFlags
             }
         }
         

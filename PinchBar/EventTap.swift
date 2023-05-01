@@ -31,7 +31,7 @@ class EventTap {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         callWhenCreated?()
         
-        if !MultitouchSupportStart() {
+        if !Multitouch.start() {
             NSLog("Cannot start Multitouch Support")
         }
     }

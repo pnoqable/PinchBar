@@ -7,14 +7,17 @@ struct Preset: EventMapping {
         mappings[event.flags.purified]?.map(event) ?? [event]
     }
     
-    static let fontSize = Self(mappings:
-                                [.maskNoFlags: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30),
-                                 .maskCommand: .pinchToPinch()])
-    
     static let cubase = Self(mappings:
                                 [.maskNoFlags: .pinchToWheel(),
                                  .maskAlternate: .pinchToKeys(flags: .maskAlternate, codeA: 5, codeB: 4),
                                  .maskCommand: .pinchToKeys(flags: .maskShift, codeA: 5, codeB: 4)])
+    
+    static let fontSize = Self(mappings:
+                                [.maskNoFlags: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30),
+                                 .maskCommand: .pinchToPinch()])
+    
+    static let fontSizeCmd = Self(mappings:
+                                    [.maskCommand: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30)])
 }
 
 extension Preset: Codable {
