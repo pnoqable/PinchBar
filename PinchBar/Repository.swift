@@ -16,20 +16,20 @@ class Repository {
     
     private func checkUpdate(data: Data?, error: Error?, verbose: Bool) {
         guard let data, let json = try? JSONSerialization.jsonObject(with: data) as? [String:Any],
-              let version = json["tag_name"] as? String, let urlString = json["html_url"] as? String,
+              let newVersion = json["tag_name"] as? String, let urlString = json["html_url"] as? String,
               let url = URL(string: urlString) else {
             return verbose ? asyncAlert("Communication error", error?.localizedDescription) : ()
         }
         
-        guard self.version.compare(version, options: .numeric) == .orderedAscending else {
+        guard version.compare(newVersion, options: .numeric) == .orderedAscending else {
             return verbose ? asyncAlert("PinchBar is up-to-date!", "Current Version: \(version)") : ()
         }
         
-        let updateKnown = version == UserDefaults.standard.string(forKey: "knownVersion")
+        let updateKnown = newVersion == UserDefaults.standard.string(forKey: "knownVersion")
         
         guard verbose || !updateKnown else { return }
         
-        asyncAlert("PinchBar \(version) is now available!", "Current Version: \(version)") { alert in
+        asyncAlert("PinchBar \(newVersion) is now available!", "Current Version: \(version)") { alert in
             alert.addButton(withTitle: "View on GitHub")
             alert.addButton(withTitle: "Ignore for now")
             alert.showsSuppressionButton = true
@@ -40,7 +40,7 @@ class Repository {
             }
             
             if alert.suppressionButton?.state == .on {
-                UserDefaults.standard.set(version, forKey: "knownVersion")
+                UserDefaults.standard.set(newVersion, forKey: "knownVersion")
             } else {
                 UserDefaults.standard.removeObject(forKey: "knownVersion")
             }
