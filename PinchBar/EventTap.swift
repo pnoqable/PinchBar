@@ -31,6 +31,10 @@ class EventTap {
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         callWhenCreated?()
         
+        Multitouch.setOnTrackpadTap {
+            [weak self] in self?.mappings.filterMap(MiddleClickMapping.onTrackpadTap).callAll()
+        }
+        
         if !Multitouch.start() {
             NSLog("Cannot start Multitouch Support")
         }

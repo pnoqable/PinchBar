@@ -2,6 +2,20 @@ import Cocoa
 
 typealias Callback = () -> ()
 
+extension Array {
+    func callAll() where Element == Callback {
+        forEach { $0() }
+    }
+    
+    func filter<T>(_ type: T.Type) -> [T] {
+        filter { $0 is T } as! [T]
+    }
+    
+    func filterMap<A, B>(_ transform: (A) -> (B)) -> [B] {
+        filter(A.self).map(transform)
+    }
+}
+
 extension CGEventField: Codable {
     static let subtype = Self(rawValue: 110)!
     static let magnification = Self(rawValue: 113)!

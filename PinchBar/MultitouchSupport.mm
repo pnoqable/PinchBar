@@ -49,6 +49,8 @@ std::map<int, std::array<float, 2>> touchStartPositions;
 double lastTouchTime = 0;
 std::vector<int> lastTouchCounts;
 
+Callback onTrackpadTap = nil;
+
 #pragma mark private functions
 
 static void contactFrameCallback(MTDeviceRef device, MTTouchRef touches, int count, double time) {
@@ -88,6 +90,10 @@ static void contactFrameCallback(MTDeviceRef device, MTTouchRef touches, int cou
     if(count == 0) {
         if(time - lastTouchTime < NSEvent.doubleClickInterval) {
             lastTouchCounts.push_back((int)touchStartPositions.size());
+            
+            if(isTrackpad && onTrackpadTap) {
+                onTrackpadTap();
+            }
         } else {
             lastTouchCounts.clear();
         }
@@ -177,6 +183,14 @@ static bool registerMultitouchDeviceAddedCallback(void) {
 
 + (bool)isDoubleTap {
     return lastTouchCounts == std::vector{touchCount};
+}
+
++ (void)setOnTrackpadTap:(Callback)callback {
+    onTrackpadTap = callback;
+}
+
++ (NSInteger)lastTouchCount {
+    return lastTouchCounts.size() ? lastTouchCounts.back() : 0;
 }
 
 @end

@@ -1,5 +1,7 @@
 #import <Foundation/Foundation.h>
 
+typedef void (^Callback)();
+
 @interface Multitouch : NSObject
 
 + (bool)start;
@@ -9,5 +11,9 @@
 
 + (bool)isOneAndAHalfTap;
 + (bool)isDoubleTap;
+
++ (void)setOnTrackpadTap:(Callback)callback;
+
++ (NSInteger)lastTouchCount;
 
 @end
