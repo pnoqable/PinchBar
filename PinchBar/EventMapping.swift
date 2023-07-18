@@ -6,9 +6,14 @@ protocol EventMapping {
 
 struct MiddleClickMapping: EventMapping {
     private static var mapMiddleClick = false
+    private static var skipTapEvent = false
     
     var onMousepad: Int
     var onTrackpad: Int
+    
+    var isTrackpadTapActive: Bool {
+        UserDefaults(suiteName: "com.apple.AppleMultitouchTrackpad")?.bool(forKey: "Clicking") ?? false
+    }
     
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.type ∈ .leftMouseDown ... .rightMouseUp {
@@ -25,10 +30,26 @@ struct MiddleClickMapping: EventMapping {
             if Self.mapMiddleClick || justFinished {
                 event.type = event.type ∈ [.leftMouseDown, .rightMouseDown] ? .otherMouseDown : .otherMouseUp
                 event.mouseButtonNumber = 2;
+                Self.skipTapEvent = true
             }
         }
         
         return [event]
+    }
+    
+    func onTrackpadTap() {
+        if Self.skipTapEvent {
+            Self.skipTapEvent = false
+        } else if Multitouch.lastTouchCount() == onTrackpad && isTrackpadTapActive {
+            let event = CGEvent(mouseEventSource: nil,
+                                mouseType: .otherMouseDown,
+                                mouseCursorPosition: CGEvent(source: nil)!.location,
+                                mouseButton: .center)!
+            
+            event.post(tap: .cghidEventTap)
+            event.type = .otherMouseUp
+            event.post(tap: .cghidEventTap)
+        }
     }
 }
 
