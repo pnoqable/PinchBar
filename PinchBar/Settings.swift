@@ -1,6 +1,8 @@
 import Cocoa
 
 class Settings {
+    var logEvents: Bool
+        
     var appPresets: [String: String] = ["Cubase": "Cubase"]
     var presets: [String: Preset] = ["Cubase": .cubase, "Font Size": .fontSize]
     
@@ -10,6 +12,7 @@ class Settings {
     func preset(named name: String?) -> Preset? { name.flatMap { name in presets[name] } }
     
     init() {
+        self.logEvents = UserDefaults.standard.bool(forKey: "logEvents")
         if let dict = UserDefaults.standard.dictionary(forKey: "presets"),
            let json = try? JSONSerialization.data(withJSONObject: dict),
            let presets = try? JSONDecoder().decode(type(of: presets), from: json),
@@ -20,6 +23,7 @@ class Settings {
     }
     
     func save() {
+        UserDefaults.standard.set(self.logEvents, forKey: "logEvents")
         if let json = try? JSONEncoder().encode(presets),
            let dict = try? JSONSerialization.jsonObject(with: json) {
             UserDefaults.standard.set(dict, forKey: "presets")

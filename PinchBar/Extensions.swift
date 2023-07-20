@@ -36,6 +36,11 @@ extension CGEvent {
         case ended = 4
     }
     
+    var mouseButtonNumber: Int64 {
+        get { getIntegerValueField(.mouseEventButtonNumber) }
+        set { setIntegerValueField(.mouseEventButtonNumber, value: newValue) }
+    }
+    
     var scrollPointDeltaAxis1: Int64 {
         get { getIntegerValueField(.scrollWheelEventPointDeltaAxis1) }
         set { setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: newValue) }
@@ -44,6 +49,10 @@ extension CGEvent {
     var scrollPhase: Phase {
         get { Phase(rawValue: getIntegerValueField(.scrollWheelEventScrollPhase)) ?? .other }
         set { setIntegerValueField(.scrollWheelEventScrollPhase, value: newValue.rawValue) }
+    }
+    
+    var momentumPhase: Bool {
+        getIntegerValueField(.scrollWheelEventMomentumPhase) != 0
     }
     
     var subtype: Subtype {

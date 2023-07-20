@@ -3,9 +3,9 @@ import Cocoa
 class EventTap {
     private var eventTap: CFMachPort?
     
-    var preset: Preset?
-    
     var callWhenCreated: Callback?
+    var logEvents: Bool = false
+    var preset: Preset?
     
     func start() {
         let adapter: CGEventTapCallBack = { proxy, type, event, userInfo in
@@ -31,55 +31,117 @@ class EventTap {
         let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
         CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
         callWhenCreated?()
+        
+        if !MultitouchSupportStart() {
+            NSLog("Cannot start Multitouch Support")
+        }
     }
     
-    enum Zooming {
-        case not
-        case inTransaction
-        case finished
+    enum MapScrollToPinchState {
+        case inProgress
+        case dropMomentum(since: CGEventTimestamp)
+        case dropScroll(since: CGEventTimestamp)
+        case inactive(since: CGEventTimestamp)
+        
+        var isInProgress: Bool {
+            switch self {
+            case .inProgress: return true
+            default: return false
+            }
+        }
+        
+        var dropEvent: Bool {
+            switch self {
+            case .dropMomentum(_), .dropScroll(_): return true
+            default: return false
+            }
+        }
+        
+        func alreadyTimeFor(_ event: CGEvent) -> Bool {
+            switch self {
+            case .inProgress: return false
+            case let .dropMomentum(t), let .dropScroll(t), let .inactive(t):
+                return event.timestamp - t > 100_000_000
+            }
+        }
     }
     
-    var zooming = Zooming.not
+    var mapScrollToPinchState = MapScrollToPinchState.inactive(since: 0)
+    var isDroppingRightClick = false
+    var isMappingMultitouchClick = false
     
     private func tap(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout {
             CGEvent.tapEnable(tap: eventTap!, enable: true)
-        } else if let mapping = preset?[event] {
-            debugEvent(event)
-            let newEvent = mapping.tap(event, proxy: proxy)
-            (newEvent?.takeUnretainedValue()).flatMap(debugEvent)
-            return newEvent
         }
         
         if event.type == .scrollWheel {
-            if event.scrollPhase == .began {
-                if event.flags.isSuperset(of: .init(arrayLiteral: .maskCommand, .maskAlternate)) {
-                    zooming = .inTransaction
-                } else {
-                    zooming = .not
+            var justFinishedMap = false
+            var justFinishedDrop = false
+            if event.scrollPhase == .began && MultitouchSupportIsTouchCount(-1, 2) &&
+                mapScrollToPinchState.alreadyTimeFor(event) {
+                mapScrollToPinchState = .inProgress
+            } else if case .inProgress = mapScrollToPinchState, event.scrollPhase == .ended {
+                mapScrollToPinchState = .dropMomentum(since: event.timestamp)
+                justFinishedMap = true
+            } else if case .dropMomentum = mapScrollToPinchState, !event.momentumPhase,
+                      mapScrollToPinchState.alreadyTimeFor(event) {
+                mapScrollToPinchState = .inactive(since: event.timestamp)
+            } else if case let .dropMomentum(t) = mapScrollToPinchState, event.scrollPhase == .began,
+                      !mapScrollToPinchState.alreadyTimeFor(event) {
+                mapScrollToPinchState = .dropScroll(since: t)
+            } else if case let .dropScroll(t) = mapScrollToPinchState, event.scrollPhase == .ended {
+                mapScrollToPinchState = .dropMomentum(since: t)
+                justFinishedDrop = true
+            }
+            
+            if mapScrollToPinchState.isInProgress || justFinishedMap {
+                guard event.scrollPhase != .other else { return nil }
+                return logResult(.passRetained(
+                    CGEvent(magnifyEventSource: nil,
+                            magnification: 0.005 * Double(event.scrollPointDeltaAxis1),
+                            phase: event.scrollPhase)?.withFlags(flags: event.flags)))
+                .flatMap { result in
+                    let result = result.takeUnretainedValue()
+                    return tap(proxy: proxy, type: result.type, event: result)
                 }
-            }
-            
-            if zooming != .not && event.scrollPhase == .other {
-                return nil
-            }
-            
-            if zooming == .inTransaction {
-                zooming = event.scrollPhase != .ended ? .inTransaction : .finished
-                debugEvent(event)
-                let newEvent = CGEvent(magnifyEventSource: nil,
-                                       magnification: 0.005 * Double(event.scrollPointDeltaAxis1),
-                                       phase: event.scrollPhase)?.withFlags(flags: .maskNoFlags)
-                newEvent.flatMap(debugEvent)
-                return .passRetained(newEvent)
+            } else if mapScrollToPinchState.dropEvent || justFinishedDrop {
+                return logResult(nil)
             }
         }
         
-        if .leftMouseDown ... .rightMouseUp ~= event.type {
-            debugEvent(event)
-            if zooming == .inTransaction {
-                return nil
+        if .rightMouseDown ... .rightMouseUp ~= event.type {
+            var justFinished = false
+            if event.type == .rightMouseDown && mapScrollToPinchState.isInProgress {
+                isDroppingRightClick = true
+            } else if isDroppingRightClick && event.type == .rightMouseUp {
+                isDroppingRightClick = false
+                justFinished = true
             }
+            
+            if isDroppingRightClick || justFinished {
+                return logResult(nil)
+            }
+        }
+        
+        if .leftMouseDown ... .leftMouseUp ~= event.type {
+            var justFinished = false
+            if event.type == .leftMouseDown && MultitouchSupportIsTouchCount(3, 2) {
+                isMappingMultitouchClick = true
+            } else if isMappingMultitouchClick && event.type == .leftMouseUp {
+                isMappingMultitouchClick = false
+                justFinished = true
+            }
+            
+            if isMappingMultitouchClick || justFinished {
+                event.type = event.type == .leftMouseDown ? .otherMouseDown : .otherMouseUp
+                event.mouseButtonNumber = 2;
+                logEvent(event)
+            }
+        }
+        
+        if let mapping = preset?[event] {
+            return logResult(mapping.tap(event, proxy: proxy))
         }
         
         return .passUnretained(event)
@@ -87,7 +149,10 @@ class EventTap {
     
     var indicies: Set<Int> = []
     
-    func debugEvent(_ event: CGEvent) {
+    func logEvent(_ event: CGEvent?) {
+        guard logEvents else { return }
+        guard let event else { return NSLog("dropped...") }
+        
         let pairs = (0 ..< 256).map { i in
             (i, event.getDoubleValueField(CGEventField(rawValue: i)!))
         }
@@ -103,5 +168,10 @@ class EventTap {
         }
         
         NSLog(strings.joined(separator: "\t"))
+    }
+    
+    func logResult(_ event: Unmanaged<CGEvent>?) -> Unmanaged<CGEvent>? {
+        logEvent(event?.takeUnretainedValue())
+        return event
     }
 }

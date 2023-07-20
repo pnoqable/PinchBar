@@ -17,6 +17,7 @@ private let unknownApp: String = "unknown Application"
         statusMenu.callWhenPresetSelected = { [weak self] p in self?.changePreset(to: p) }
         statusMenu.create(repository: repository, settings: settings)
         
+        eventTap.logEvents = settings.logEvents
         eventTap.callWhenCreated = { [weak statusMenu] in statusMenu?.enableSubmenu() }
         eventTap.start()
         
