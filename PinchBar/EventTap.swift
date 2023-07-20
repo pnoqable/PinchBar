@@ -15,10 +15,12 @@ class EventTap {
         
         let mySelf = Unmanaged.passUnretained(self).toOpaque()
         
+        let eventMask = CGEventMask(1<<29 | 1<<22 | 0b11110) // trackpad, scroll and click events
+        
         eventTap = CGEvent.tapCreate(tap: .cghidEventTap,
                                      place: .headInsertEventTap,
                                      options: .defaultTap,
-                                     eventsOfInterest:  1<<29 | 1<<22, // trackpad and scroll events
+                                     eventsOfInterest: eventMask,
                                      callback: adapter,
                                      userInfo: mySelf)
         
@@ -31,6 +33,14 @@ class EventTap {
         callWhenCreated?()
     }
     
+    enum Zooming {
+        case not
+        case inTransaction
+        case finished
+    }
+    
+    var zooming = Zooming.not
+    
     private func tap(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout {
             CGEvent.tapEnable(tap: eventTap!, enable: true)
@@ -41,15 +51,35 @@ class EventTap {
             return newEvent
         }
         
-        if event.type == .scrollWheel,
-           event.flags.isSuperset(of: .init(arrayLiteral: .maskCommand, .maskAlternate)) {
+        if event.type == .scrollWheel {
+            if event.scrollPhase == .began {
+                if event.flags.isSuperset(of: .init(arrayLiteral: .maskCommand, .maskAlternate)) {
+                    zooming = .inTransaction
+                } else {
+                    zooming = .not
+                }
+            }
+            
+            if zooming != .not && event.scrollPhase == .other {
+                return nil
+            }
+            
+            if zooming == .inTransaction {
+                zooming = event.scrollPhase != .ended ? .inTransaction : .finished
+                debugEvent(event)
+                let newEvent = CGEvent(magnifyEventSource: nil,
+                                       magnification: 0.005 * Double(event.scrollPointDeltaAxis1),
+                                       phase: event.scrollPhase)?.withFlags(flags: .maskNoFlags)
+                newEvent.flatMap(debugEvent)
+                return .passRetained(newEvent)
+            }
+        }
+        
+        if .leftMouseDown ... .rightMouseUp ~= event.type {
             debugEvent(event)
-            guard event.scrollPhase != .other else { return nil } // discard maybegin, momentum phase, ...
-            let newEvent = CGEvent(magnifyEventSource: nil,
-                                      magnification: 0.005 * Double(event.scrollPointDeltaAxis1),
-                                      phase: event.scrollPhase)?.withFlags(flags: .maskNoFlags)
-            newEvent.flatMap(debugEvent)
-            return .passRetained(newEvent)
+            if zooming == .inTransaction {
+                return nil
+            }
         }
         
         return .passUnretained(event)
