@@ -3,7 +3,7 @@ import Cocoa
 class EventTap {
     private var eventTap: CFMachPort?
     
-    var preset: Settings.Preset?
+    var preset: Preset?
     
     var callWhenCreated: Callback?
     
@@ -34,18 +34,44 @@ class EventTap {
     private func tap(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         if type == .tapDisabledByTimeout {
             CGEvent.tapEnable(tap: eventTap!, enable: true)
-        } else if EventMapping.canTap(event), let mapping = preset?[event.flags.purified] {
-            return mapping.tap(event, proxy: proxy)
+        } else if let mapping = preset?[event] {
+            debugEvent(event)
+            let newEvent = mapping.tap(event, proxy: proxy)
+            (newEvent?.takeUnretainedValue()).flatMap(debugEvent)
+            return newEvent
         }
         
         if event.type == .scrollWheel,
            event.flags.isSuperset(of: .init(arrayLiteral: .maskCommand, .maskAlternate)) {
-            return event.scrollPhase == .other ? nil : // -> discard maybegin, momentum phase, ...
-                .passRetained(CGEvent(magnifyEventSource: nil,
+            debugEvent(event)
+            guard event.scrollPhase != .other else { return nil } // discard maybegin, momentum phase, ...
+            let newEvent = CGEvent(magnifyEventSource: nil,
                                       magnification: 0.005 * Double(event.scrollPointDeltaAxis1),
-                                      phase: event.scrollPhase)?.withFlags(flags: .maskNoFlags))
+                                      phase: event.scrollPhase)?.withFlags(flags: .maskNoFlags)
+            newEvent.flatMap(debugEvent)
+            return .passRetained(newEvent)
         }
         
         return .passUnretained(event)
+    }
+    
+    var indicies: Set<Int> = []
+    
+    func debugEvent(_ event: CGEvent) {
+        let pairs = (0 ..< 256).map { i in
+            (i, event.getDoubleValueField(CGEventField(rawValue: i)!))
+        }
+        
+        for (i, v) in pairs where v != 0 {
+            indicies.insert(Int(i))
+        }
+        
+        var strings = indicies.sorted().map { pairs[$0] }.map { (i,v) in "\(i)=\(v)" }
+        
+        if let nsEvent = NSEvent(cgEvent: event) {
+            strings.append(nsEvent.debugDescription)
+        }
+        
+        NSLog(strings.joined(separator: "\t"))
     }
 }

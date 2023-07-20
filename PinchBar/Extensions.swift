@@ -5,11 +5,6 @@ typealias Callback = () -> ()
 extension CGEventFlags: Codable, Hashable {
     static let maskNoFlags = Self([])
     
-    init?(_ string: String) {
-        guard let i = UInt64(string) else { return nil }
-        self = Self(rawValue: i)
-    }
-    
     // key without left/right info
     static let pureKeyMask = UInt64.max << 8
     
@@ -77,10 +72,10 @@ func CGEvent(magnifyEventSource source: CGEventSource?, magnification: Double, p
 
 extension Dictionary {
     func mapKeys<T>(_ transform: (Key) throws -> T) rethrows -> [T: Value] {
-        try .init(uniqueKeysWithValues: map{ (k, v) in try (transform(k), v) })
+        try .init(uniqueKeysWithValues: map { (k, v) in try (transform(k), v) })
     }
     func compactMapKeys<T>(_ transform: (Key) throws -> T?) rethrows -> [T: Value] {
-        try .init(uniqueKeysWithValues: compactMap{ (k, v) in try transform(k).map{ t in (t, v) } })
+        try .init(uniqueKeysWithValues: compactMap { (k, v) in try transform(k).map { t in (t, v) } })
     }
 }
 
