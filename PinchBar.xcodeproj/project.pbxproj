@@ -10,7 +10,6 @@
 		8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8403F28B27FF191600CAAC3C /* EventTap.swift */; };
 		844469DC29993ADB00D3D424 /* MultitouchSupport.h in Sources */ = {isa = PBXBuildFile; fileRef = 844469DB29993ADB00D3D424 /* MultitouchSupport.h */; };
 		844F3B2B299A4E3A00C7953E /* MultitouchSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 844F3B2A299A4E3900C7953E /* MultitouchSupport.framework */; };
-		844F3B2C299A4E3A00C7953E /* MultitouchSupport.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 844F3B2A299A4E3900C7953E /* MultitouchSupport.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		8459492227FA287800DBB447 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8459492127FA287800DBB447 /* AppDelegate.swift */; };
 		8459492427FA287C00DBB447 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8459492327FA287C00DBB447 /* Assets.xcassets */; };
 		846AF3CC2804F5FC00B3E06F /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846AF3CB2804F5FC00B3E06F /* Repository.swift */; };
@@ -30,7 +29,6 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
-				844F3B2C299A4E3A00C7953E /* MultitouchSupport.framework in Embed Frameworks */,
 			);
 			name = "Embed Frameworks";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -333,7 +331,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = MW6A6MU64S;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -345,7 +343,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.5;
+				MARKETING_VERSION = 0.2.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pnoqable.PinchBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
@@ -369,7 +367,7 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 7;
+				CURRENT_PROJECT_VERSION = 8;
 				DEVELOPMENT_TEAM = MW6A6MU64S;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -381,7 +379,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.2.5;
+				MARKETING_VERSION = 0.2.6;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pnoqable.PinchBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";

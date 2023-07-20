@@ -9,7 +9,7 @@ typedef void (*MTContactCallbackFunction)(MTDeviceRef, MTTouchRef, int, double, 
 
 CFArrayRef MTDeviceCreateList(void);
 
-void MTDeviceGetSensorSurfaceDimensions(MTDeviceRef, int*, int*);
+void MTDeviceGetSensorDimensions(MTDeviceRef, int*, int*);
 
 void MTDeviceStart(MTDeviceRef, int);
 void MTDeviceStop(MTDeviceRef);
@@ -23,14 +23,14 @@ static IONotificationPortRef ioNotificationPort = NULL;
 
 static CFArrayRef multitouchDevices = NULL;
 
-static int sensorWidth = 0;
-static int sensorHeight = 0;
+static int sensorCols = 0;
+static int sensorRows = 0;
 static int touchCount = 0;
 
 #pragma mark private functions
 
 static void contactFrameCallback(MTDeviceRef device, MTTouchRef touches, int touchesCount, double time, int frame) {
-    MTDeviceGetSensorSurfaceDimensions(device, &sensorWidth, &sensorHeight);
+    MTDeviceGetSensorDimensions(device, &sensorRows, &sensorCols);
     touchCount = touchesCount;
 }
 
@@ -100,5 +100,5 @@ bool MultitouchSupportStart() {
 }
 
 bool MultitouchSupportIsTouchCount(int trackpad, int mouse) {
-    return sensorWidth > sensorHeight ? trackpad == touchCount : mouse == touchCount;
+    return sensorCols > sensorRows ? trackpad == touchCount : mouse == touchCount;
 }
