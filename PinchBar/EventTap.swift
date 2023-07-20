@@ -119,7 +119,7 @@ class EventTap {
         
         if .leftMouseDown ... .leftMouseUp ~= event.type {
             var justFinished = false
-            if event.type == .leftMouseDown && MultitouchSupportIsTouchCount(3, 2) {
+            if event.type == .leftMouseDown && MultitouchSupportIsTouchCount(3, 3) {
                 isMappingMultitouchClick = true
             } else if isMappingMultitouchClick && event.type == .leftMouseUp {
                 isMappingMultitouchClick = false
