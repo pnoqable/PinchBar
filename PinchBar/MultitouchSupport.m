@@ -8,9 +8,8 @@ typedef const void* MTTouchRef;
 typedef void (*MTContactCallbackFunction)(MTDeviceRef, MTTouchRef, int, double, int);
 
 CFArrayRef MTDeviceCreateList(void);
-void MTDeviceRelease(MTDeviceRef);
 
-bool MTDeviceIsMTHIDDevice(MTDeviceRef);
+void MTDeviceGetSensorSurfaceDimensions(MTDeviceRef, int*, int*);
 
 void MTDeviceStart(MTDeviceRef, int);
 void MTDeviceStop(MTDeviceRef);
@@ -24,13 +23,14 @@ static IONotificationPortRef ioNotificationPort = NULL;
 
 static CFArrayRef multitouchDevices = NULL;
 
-static bool isTrackpad = false;
+static int sensorWidth = 0;
+static int sensorHeight = 0;
 static int touchCount = 0;
 
 #pragma mark private functions
 
 static void contactFrameCallback(MTDeviceRef device, MTTouchRef touches, int touchesCount, double time, int frame) {
-    isTrackpad = MTDeviceIsMTHIDDevice(device);
+    MTDeviceGetSensorSurfaceDimensions(device, &sensorWidth, &sensorHeight);
     touchCount = touchesCount;
 }
 
@@ -40,8 +40,8 @@ static bool registerContactFrameCallback() {
             MTDeviceRef device = CFArrayGetValueAtIndex(multitouchDevices, i);
             MTUnregisterContactFrameCallback(device, contactFrameCallback);
             MTDeviceStop(device);
-            MTDeviceRelease(device);
         }
+        CFRelease(multitouchDevices);
     }
     
     multitouchDevices = MTDeviceCreateList();
@@ -95,18 +95,10 @@ static bool registerMultitouchDeviceAddedCallback() {
 
 #pragma mark implementation
 
-bool MultitouchSupportStart(void) {
+bool MultitouchSupportStart() {
     return registerContactFrameCallback() && registerMultitouchDeviceAddedCallback();
 }
 
-bool MultitouchSupportIsTrackpad(void) {
-    return isTrackpad;
-}
-
-int MultitouchSupportGetTouchCount(void) {
-    return touchCount;
-}
-
 bool MultitouchSupportIsTouchCount(int trackpad, int mouse) {
-    return isTrackpad ? trackpad == touchCount : mouse == touchCount;
+    return sensorWidth > sensorHeight ? trackpad == touchCount : mouse == touchCount;
 }

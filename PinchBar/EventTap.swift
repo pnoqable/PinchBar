@@ -37,36 +37,24 @@ class EventTap {
         }
     }
     
-    enum MapScrollToPinchState {
+    enum MapScrollToPinchState: Equatable {
+        case inactive
         case inProgress
         case dropMomentum(since: CGEventTimestamp)
         case dropScroll(since: CGEventTimestamp)
-        case inactive(since: CGEventTimestamp)
         
-        var isInProgress: Bool {
+        var isDropEvent: Bool {
             switch self {
-            case .inProgress: return true
+            case .dropMomentum, .dropScroll: return true
             default: return false
-            }
-        }
-        
-        var dropEvent: Bool {
-            switch self {
-            case .dropMomentum(_), .dropScroll(_): return true
-            default: return false
-            }
-        }
-        
-        func alreadyTimeFor(_ event: CGEvent) -> Bool {
-            switch self {
-            case .inProgress: return false
-            case let .dropMomentum(t), let .dropScroll(t), let .inactive(t):
-                return event.timestamp - t > 100_000_000
             }
         }
     }
     
-    var mapScrollToPinchState = MapScrollToPinchState.inactive(since: 0)
+    var mapScrollToPinchState = MapScrollToPinchState.inactive {
+        willSet { NSLog("\(newValue)") }
+    }
+    
     var isDroppingRightClick = false
     var isMappingMultitouchClick = false
     
@@ -76,26 +64,31 @@ class EventTap {
         }
         
         if event.type == .scrollWheel {
+            let isShortlyAfter = { t in event.timestamp - t < 100_000_000 }
             var justFinishedMap = false
             var justFinishedDrop = false
-            if event.scrollPhase == .began && MultitouchSupportIsTouchCount(-1, 2) &&
-                mapScrollToPinchState.alreadyTimeFor(event) {
-                mapScrollToPinchState = .inProgress
-            } else if case .inProgress = mapScrollToPinchState, event.scrollPhase == .ended {
+            switch mapScrollToPinchState {
+            case .inProgress where event.scrollPhase == .ended:
                 mapScrollToPinchState = .dropMomentum(since: event.timestamp)
                 justFinishedMap = true
-            } else if case .dropMomentum = mapScrollToPinchState, !event.momentumPhase,
-                      mapScrollToPinchState.alreadyTimeFor(event) {
-                mapScrollToPinchState = .inactive(since: event.timestamp)
-            } else if case let .dropMomentum(t) = mapScrollToPinchState, event.scrollPhase == .began,
-                      !mapScrollToPinchState.alreadyTimeFor(event) {
+            case let .dropMomentum(since: t) where event.scrollPhase == .began && isShortlyAfter(t):
                 mapScrollToPinchState = .dropScroll(since: t)
-            } else if case let .dropScroll(t) = mapScrollToPinchState, event.scrollPhase == .ended {
+            case let .dropMomentum(since: t) where !event.momentumPhase && !isShortlyAfter(t) &&
+                !MultitouchSupportIsTouchCount(-1, 2):
+                mapScrollToPinchState = .inactive
+            case let .dropScroll(since: t) where event.scrollPhase == .ended:
                 mapScrollToPinchState = .dropMomentum(since: t)
                 justFinishedDrop = true
+            case let .dropScroll(since: t) where event.scrollPhase == .changed && !isShortlyAfter(t):
+                mapScrollToPinchState = .inactive
+                event.scrollPhase = .began
+            default:
+                if event.scrollPhase == .began && MultitouchSupportIsTouchCount(-1, 2) {
+                    mapScrollToPinchState = .inProgress
+                }
             }
             
-            if mapScrollToPinchState.isInProgress || justFinishedMap {
+            if mapScrollToPinchState == .inProgress || justFinishedMap {
                 guard event.scrollPhase != .other else { return nil }
                 return logResult(.passRetained(
                     CGEvent(magnifyEventSource: nil,
@@ -105,14 +98,14 @@ class EventTap {
                     let result = result.takeUnretainedValue()
                     return tap(proxy: proxy, type: result.type, event: result)
                 }
-            } else if mapScrollToPinchState.dropEvent || justFinishedDrop {
+            } else if mapScrollToPinchState.isDropEvent || justFinishedDrop {
                 return logResult(nil)
             }
         }
         
         if .rightMouseDown ... .rightMouseUp ~= event.type {
             var justFinished = false
-            if event.type == .rightMouseDown && mapScrollToPinchState.isInProgress {
+            if event.type == .rightMouseDown && mapScrollToPinchState == .inProgress {
                 isDroppingRightClick = true
             } else if isDroppingRightClick && event.type == .rightMouseUp {
                 isDroppingRightClick = false
