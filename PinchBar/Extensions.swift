@@ -12,6 +12,10 @@ func ∈<Element>(element: Element, range: some RangeExpression<Element>) -> Boo
     range.contains(element)
 }
 
+func returnFirst<A, B>(_ first: A, _: B) -> A {
+    return first
+}
+
 extension Array {
     func callAll() where Element == Callback {
         forEach { $0() }

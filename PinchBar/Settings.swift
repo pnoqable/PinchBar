@@ -20,6 +20,8 @@ class Settings {
     }
     
     init() {
+        let factoryAppPresets = appPresets, factoryPresets = presets
+        
         if let dict = UserDefaults.standard.dictionary(forKey: "presets"),
            let json = try? JSONSerialization.data(withJSONObject: dict),
            let presets = try? JSONDecoder().decode(type(of: presets), from: json),
@@ -27,6 +29,9 @@ class Settings {
             self.presets = presets
             self.appPresets = appPresets
         }
+        
+        appPresets.merge(factoryAppPresets, uniquingKeysWith: returnFirst)
+        presets.merge(factoryPresets, uniquingKeysWith: returnFirst)
     }
     
     func save() {
