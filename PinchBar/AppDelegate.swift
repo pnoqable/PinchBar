@@ -22,6 +22,8 @@ private let unknownApp: String = "unknown Application"
         
         repository.checkForUpdates(verbose: false)
         
+        settings.defaultsChanged = activeAppChanged
+        
         NSWorkspace.shared.notificationCenter
             .addObserver(self, selector: #selector(activeAppChanged),
                          name: NSWorkspace.didActivateApplicationNotification, object: nil)
