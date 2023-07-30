@@ -1,6 +1,22 @@
 import Cocoa
 
+private extension UserDefaults {
+    @objc dynamic var appPresets: [String: String]? {
+        get { dictionary(forKey: "appPresets") as? [String: String] }
+        set { set(newValue, forKey: "appPresets") }
+    }
+    
+    @objc dynamic var presets: [String: Any]? {
+        get { dictionary(forKey: "presets") }
+        set { set(newValue, forKey: "presets") }
+    }
+}
+
 class Settings {
+    private let defaults = UserDefaults.standard
+    var defaultObservers: [NSKeyValueObservation] = []
+    var defaultsChanged: Callback?
+    
     var appPresets: [String: String] = ["Cubase": "Cubase"]
     
     var presets: [String: Preset] = ["Cubase": .cubase,
@@ -22,13 +38,23 @@ class Settings {
     init() {
         let factoryAppPresets = appPresets, factoryPresets = presets
         
-        if let dict = UserDefaults.standard.dictionary(forKey: "presets"),
-           let json = try? JSONSerialization.data(withJSONObject: dict),
-           let presets = try? JSONDecoder().decode(type(of: presets), from: json),
-           let appPresets = UserDefaults.standard.dictionary(forKey: "appPresets") as? [String: String] {
-            self.presets = presets
-            self.appPresets = appPresets
-        }
+        defaultObservers.append(defaults.observe(\.appPresets, options: [.initial, .new]) {
+            [weak self] _, change in
+            if let appPresets = change.newValue! {
+                self?.appPresets = appPresets
+                self?.defaultsChanged?()
+            }
+        })
+
+        defaultObservers.append(defaults.observe(\.presets, options: [.initial, .new]) {
+            [weak self] _, change in
+            if let dict = change.newValue!,
+               let json = try? JSONSerialization.data(withJSONObject: dict),
+               let presets = try? JSONDecoder().decode(type(of: self?.presets), from: json) {
+                self?.presets = presets
+                self?.defaultsChanged?()
+            }
+        })
         
         appPresets.merge(factoryAppPresets, uniquingKeysWith: { userAP, _ in userAP })
         presets.merge(factoryPresets, uniquingKeysWith: { userPreset, _ in userPreset })
@@ -36,9 +62,9 @@ class Settings {
     
     func save() {
         if let json = try? JSONEncoder().encode(presets),
-           let dict = try? JSONSerialization.jsonObject(with: json) {
-            UserDefaults.standard.set(dict, forKey: "presets")
-            UserDefaults.standard.set(appPresets, forKey: "appPresets")
+           let dict = try? JSONSerialization.jsonObject(with: json) as? [String: Any] {
+            defaults.appPresets = appPresets
+            defaults.presets = dict
         }
     }
 }
