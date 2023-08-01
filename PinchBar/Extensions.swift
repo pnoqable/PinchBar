@@ -144,6 +144,13 @@ func CGEvent(magnifyEventSource source: CGEventSource?, magnification: Double, p
     return result
 }
 
+extension Decodable {
+    init(fromPlist obj: Any, options: JSONSerialization.WritingOptions = .fragmentsAllowed) throws {
+        let data = try JSONSerialization.data(withJSONObject: obj, options: options)
+        self = try JSONDecoder().decode(Self.self, from: data)
+    }
+}
+
 extension Dictionary {
     func mapKeys<T>(_ transform: (Key) throws -> T) rethrows -> [T: Value] {
         try .init(uniqueKeysWithValues: map { (k, v) in try (transform(k), v) })
@@ -156,6 +163,14 @@ extension Dictionary {
     subscript(key: Key?) -> Value? {
         get { key.flatMap { self[$0] } }
         set { key.map     { self[$0] = newValue } }
+    }
+}
+
+extension Encodable {
+    var isNil: Bool { self as AnyObject is NSNull } // https://stackoverflow.com/a/68682982
+    
+    func plist(options opt: JSONSerialization.ReadingOptions = .fragmentsAllowed) throws -> Any? {
+        isNil ? nil : try JSONSerialization.jsonObject(with: JSONEncoder().encode(self), options: opt)
     }
 }
 
@@ -179,9 +194,69 @@ extension NSMenuItem {
     }
 }
 
-extension Optional {
-    var asArray: [Wrapped] {
-        self.map { [$0] } ?? []
+protocol ObservableUserDefault {
+    func setChangedCallback(_ callback: Callback?)
+}
+
+protocol WithUserDefaults {
+}
+
+extension WithUserDefaults {
+    var allUserDefaults: [ObservableUserDefault] {
+        Mirror(reflecting: self).children.map(\.value).filter(ObservableUserDefault.self)
+    }
+    
+    func setAllUserDefaultsChangedCallbacks(_ callback: Callback?) {
+        allUserDefaults.forEach(ObservableUserDefault.setChangedCallback <- callback)
+    }
+}
+
+@propertyWrapper
+class UserDefault<T: Codable>: NSObject, ObservableUserDefault {
+    let userDefaults = UserDefaults.standard
+    let key: String
+    var cachedValue: T
+    var cacheInvalid = true
+    var callWhenChanged: Callback?
+    
+    init(wrappedValue: T, _ key: String) {
+        self.cachedValue = wrappedValue
+        self.key         = key
+        super.init()
+        
+        userDefaults.addObserver(self, forKeyPath: key, context: nil)
+    }
+    
+    convenience init(_ key: String) where T: ExpressibleByNilLiteral {
+        self.init(wrappedValue: nil, key)
+    }
+    
+    var wrappedValue: T {
+        get {
+            if cacheInvalid, let plist = userDefaults.object(forKey: key) {
+                do { cachedValue = try T(fromPlist: plist) }
+                catch { NSLog("Couldn't decode \(key): \(error)") }
+            }
+            
+            cacheInvalid = false
+            return cachedValue
+        }
+        set {
+            cachedValue = newValue
+            do { try userDefaults.set(cachedValue.plist(), forKey: key) }
+            catch { NSLog("Couldn't encode \(key): \(error)") }
+        }
+    }
+    
+    func setChangedCallback(_ callback: Callback?) {
+        callWhenChanged = callback
+    }
+    
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?,
+                               change: [NSKeyValueChangeKey: Any]?,
+                               context: UnsafeMutableRawPointer?) {
+        cacheInvalid = true
+        callWhenChanged?()
     }
 }
 

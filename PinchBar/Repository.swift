@@ -3,6 +3,13 @@ import Cocoa
 class Repository {
     let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
     
+    @UserDefault("knownVersion") var knownVersion: String?
+    
+    init() {
+        NSLog("PinchBar \(version)")
+        checkForUpdates(verbose: false)
+    }
+    
     func openGitHub() {
         NSWorkspace.shared.open(URL(string: "https://github.com/pnoqable/PinchBar")!)
     }
@@ -25,7 +32,7 @@ class Repository {
             return verbose ? asyncAlert("PinchBar is up-to-date!", "Current Version: \(version)") : ()
         }
         
-        let updateKnown = newVersion == UserDefaults.standard.string(forKey: "knownVersion")
+        let updateKnown = newVersion == knownVersion
         
         guard verbose || !updateKnown else { return }
         
@@ -39,11 +46,7 @@ class Repository {
                 NSWorkspace.shared.open(url)
             }
             
-            if alert.suppressionButton?.state == .on {
-                UserDefaults.standard.set(newVersion, forKey: "knownVersion")
-            } else {
-                UserDefaults.standard.removeObject(forKey: "knownVersion")
-            }
+            self.knownVersion = alert.suppressionButton?.state == .on ? newVersion : nil
         }
     }
     
