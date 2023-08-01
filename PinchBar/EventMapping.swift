@@ -1,6 +1,6 @@
 import Cocoa
 
-protocol EventMapping {
+protocol EventMapping: Codable {
     func map(_ event: CGEvent) -> [CGEvent]
 }
 
@@ -93,7 +93,7 @@ struct MultiTapMapping: EventMapping {
     }
 }
 
-struct PinchMapping: EventMapping, Codable {
+struct PinchMapping: EventMapping {
     enum Replacement: Codable {
         case wheel
         case keys(codeA: CGKeyCode, codeB: CGKeyCode)
