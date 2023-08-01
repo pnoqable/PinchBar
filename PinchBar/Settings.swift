@@ -1,70 +1,65 @@
 import Cocoa
 
-private extension UserDefaults {
-    @objc dynamic var appPresets: [String: String]? {
-        get { dictionary(forKey: "appPresets") as? [String: String] }
-        set { set(newValue, forKey: "appPresets") }
-    }
-    
-    @objc dynamic var presets: [String: Any]? {
-        get { dictionary(forKey: "presets") }
-        set { set(newValue, forKey: "presets") }
-    }
-}
-
 class Settings {
-    private let defaults = UserDefaults.standard
-    var defaultObservers: [NSKeyValueObservation] = []
-    var defaultsChanged: Callback?
+    enum MappingType: String, Codable {
+        case middleClick, mouseZoom, multiTap
+    }
     
-    var appPresets: [String: String] = ["Cubase": "Cubase"]
+    struct Defaults {
+        static let globalMappings: [MappingType] = [.middleClick, .mouseZoom, .multiTap]
+        static let middleClick    = MiddleClickMapping(onMousepad: 2, onTrackpad: 3)
+        static let mouseZoom      = MouseZoomMapping(sensivity: 0.005)
+        static let multiTap       = MultiTapMapping(oneAndAHalfTapFlags: .maskAlternate,
+                                                    doubleTapFlags:      .maskCommand)
+        
+        static let appPresets     = ["Cubase": "Cubase"]
+        static let presets        = ["Cubase":        Preset.cubase,
+                                     "Font Size":     Preset.fontSize,
+                                     "Font Size/cmd": Preset.fontSizeCmd]
+    }
     
-    var presets: [String: Preset] = ["Cubase": .cubase,
-                                     "Font Size": .fontSize,
-                                     "Font Size/cmd": .fontSizeCmd]
+    @UserDefault("globalMappings") var globalMappings = Defaults.globalMappings
+    @UserDefault("middleClick")    var middleClick    = Defaults.middleClick
+    @UserDefault("mouseZoom")      var mouseZoom      = Defaults.mouseZoom
+    @UserDefault("multiTap")       var multiTap       = Defaults.multiTap
+    @UserDefault("appPresets")     var appPresets     = Defaults.appPresets
+    @UserDefault("presets")        var presets        = Defaults.presets
     
+    var globalMappingNames: [String] { globalMappings.map(\.rawValue) }
     var appNames: [String] { appPresets.keys.sorted() }
     var presetNames: [String] { presets.keys.sorted() }
     
-    let globalMappings: [EventMapping] = [MouseZoomMapping(sensivity: 0.005),
-                                          MiddleClickMapping(onMousepad: 2, onTrackpad: 3),
-                                          MultiTapMapping(oneAndAHalfTapFlags: .maskAlternate,
-                                                          doubleTapFlags:      .maskCommand)]
-    
-    func mappings(for appName: String) -> [EventMapping] {
-        globalMappings + presets[appPresets[appName]].asArray
-    }
+    var callWhenMappingsChanged: Callback?
     
     init() {
-        let factoryAppPresets = appPresets, factoryPresets = presets
+        // write global mappings to user defaults:
+        self.globalMappings = globalMappings
+        self.middleClick    = middleClick
+        self.mouseZoom      = mouseZoom
+        self.multiTap       = multiTap
         
-        defaultObservers.append(defaults.observe(\.appPresets, options: [.initial, .new]) {
-            [weak self] _, change in
-            if let appPresets = change.newValue! {
-                self?.appPresets = appPresets
-                self?.defaultsChanged?()
-            }
-        })
-
-        defaultObservers.append(defaults.observe(\.presets, options: [.initial, .new]) {
-            [weak self] _, change in
-            if let dict = change.newValue!,
-               let json = try? JSONSerialization.data(withJSONObject: dict),
-               let presets = try? JSONDecoder().decode(type(of: self?.presets), from: json) {
-                self?.presets = presets
-                self?.defaultsChanged?()
-            }
-        })
+        // upgrade path: merge customized/user presets with newly added default presets
+        appPresets.merge(Defaults.appPresets, uniquingKeysWith: { userPreset, _ in userPreset })
+        presets.merge(Defaults.presets, uniquingKeysWith: { userPreset, _ in userPreset })
         
-        appPresets.merge(factoryAppPresets, uniquingKeysWith: { userAP, _ in userAP })
-        presets.merge(factoryPresets, uniquingKeysWith: { userPreset, _ in userPreset })
+        // write (app) presets to user defaults:
+        self.appPresets = appPresets
+        self.presets    = presets
+        
+        NSLog("globalMappingNames: \(globalMappingNames.joined(separator: ", "))")
+        NSLog("appNames: \(appNames.joined(separator: ", "))")
+        NSLog("presetNames: \(presetNames.joined(separator: ", "))")
+        
+        for case var userDefault as ObservableUserDefault in Mirror(reflecting: self).children.map(\.value) {
+            userDefault.callWhenChanged = { [weak self] in self?.callWhenMappingsChanged?() }
+        }
     }
     
-    func save() {
-        if let json = try? JSONEncoder().encode(presets),
-           let dict = try? JSONSerialization.jsonObject(with: json) as? [String: Any] {
-            defaults.appPresets = appPresets
-            defaults.presets = dict
-        }
+    func mappings(for appName: String) -> [EventMapping] {
+        globalMappings.map { switch $0 {
+        case .middleClick: return middleClick
+        case .mouseZoom:   return mouseZoom
+        case .multiTap:    return multiTap
+        } } + presets[appPresets[appName]]
     }
 }

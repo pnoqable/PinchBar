@@ -12,17 +12,13 @@ private let unknownApp: String = "unknown Application"
     let statusMenu = StatusMenu()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        NSLog("PinchBar \(repository.version), configured for: \(settings.appNames)")
-        
         statusMenu.callWhenPresetSelected = { [weak self] p in self?.changePreset(to: p) }
         statusMenu.create(repository: repository, settings: settings)
         
         eventTap.callWhenCreated = { [weak statusMenu] in statusMenu?.enableSubmenu() }
         eventTap.start()
         
-        repository.checkForUpdates(verbose: false)
-        
-        settings.defaultsChanged = activeAppChanged
+        settings.callWhenMappingsChanged = { [weak self] in self?.activeAppChanged() }
         
         NSWorkspace.shared.notificationCenter
             .addObserver(self, selector: #selector(activeAppChanged),
@@ -44,8 +40,6 @@ private let unknownApp: String = "unknown Application"
     
     func changePreset(to newPreset: String?) {
         settings.appPresets[activeApp] = newPreset
-        settings.save()
-        activeAppChanged()
     }
     
     static func main() {
