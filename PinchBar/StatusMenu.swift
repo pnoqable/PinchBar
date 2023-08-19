@@ -7,7 +7,7 @@ class StatusMenu {
     
     weak var settings: Settings?
     
-    var callWhenPresetSelected: ((String?) -> ())?
+    var callWhenPresetSelected: Setter<String?>?
     
     func create(repository: Repository, settings: Settings) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
@@ -17,13 +17,11 @@ class StatusMenu {
         statusItem.menu = NSMenu()
         statusItem.menu?.autoenablesItems = false
         
-        statusItem.menu?.addItem(NSMenuItem(title: "About PinchBar " + repository.version) {
-            [weak repository] in repository?.openGitHub()
-        })
+        statusItem.menu?.addItem(NSMenuItem(title: "About PinchBar " + repository.version,
+                                            Weak(repository, Repository.openGitHub).call))
         
-        statusItem.menu?.addItem(NSMenuItem(title: "Check for Updates...") {
-            [weak repository] in repository?.checkForUpdates(verbose: true)
-        })
+        statusItem.menu?.addItem(NSMenuItem(title: "Check for Updates...",
+                                            Weak(repository, Repository.checkForUpdates <- true).call))
         
         statusItem.menu?.addItem(.separator())
         
@@ -59,16 +57,14 @@ class StatusMenu {
         let activePreset = settings.appPresets[activeApp]
         
         for preset in settings.presetNames {
-            submenu.addItem(NSMenuItem(title: preset, isChecked: activePreset == preset) {
-                [weak self] in self?.callWhenPresetSelected?(preset)
-            })
+            submenu.addItem(NSMenuItem(title: preset, isChecked: activePreset == preset,
+                                       Weak(self, \.callWhenPresetSelected <- preset).call))
         }
         
         submenu.addItem(.separator())
         
-        submenu.addItem(NSMenuItem(title: "None", isChecked: activePreset == nil) {
-            [weak self] in self?.callWhenPresetSelected?(nil)
-        })
+        submenu.addItem(NSMenuItem(title: "None", isChecked: activePreset == nil,
+                                   Weak(self, \.callWhenPresetSelected <- nil).call))
         
         statusItem.button?.appearsDisabled = activePreset == nil || menuItemPreferences.isEnabled
         menuItemConfigure.title = "Change Preset for " + activeApp

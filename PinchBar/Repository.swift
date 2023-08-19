@@ -9,8 +9,8 @@ class Repository {
     
     func checkForUpdates(verbose: Bool) {
         let url = URL(string: "https://api.github.com/repos/pnoqable/PinchBar/releases/latest")!
-        URLSession(configuration: .ephemeral).dataTask(with: url) { data, _, error in
-            self.checkUpdate(data: data, error: error, verbose: verbose)
+        URLSession(configuration: .ephemeral).dataTask(with: url) { [weak self] data, _, error in
+            self?.checkUpdate(data: data, error: error, verbose: verbose)
         }.resume()
     }
     
@@ -53,7 +53,7 @@ class Repository {
     }
     
     private func asyncAlert(_ messageText: String, _ informativeText: String?,
-                            _ addButtonsAndRun: @escaping ((NSAlert)->()) = addOkAndRun) {
+                            _ addButtonsAndRun: @escaping Setter<NSAlert> = addOkAndRun) {
         DispatchQueue.main.async {
             NSApplication.shared.activate(ignoringOtherApps: true)
             

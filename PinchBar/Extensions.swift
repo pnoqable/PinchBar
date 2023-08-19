@@ -1,6 +1,32 @@
 import Cocoa
 
 typealias Callback = () -> ()
+typealias UnaryFunc<P, R> = (P) -> R
+typealias Setter<P> = UnaryFunc<P, ()>
+
+infix operator <-
+
+func <-<A, B, C>(abc: @escaping (A) -> (B) -> C, b: B) -> (A) -> C {
+    { a in abc(a)(b) }
+}
+
+func <-<A, B, C>(abc: @escaping (A) -> ((B?) -> C)?, b: B?) -> (A) -> C? {
+    { a in abc(a)?(b) }
+}
+
+func <-<A, C>(abc: @escaping (A) -> () -> C, b: Void) -> (A) -> C {
+    { a in abc(a)() }
+}
+
+infix operator ∘ // Unicode 2218 ring operator
+
+func ∘<A, B, C>(bc: @escaping UnaryFunc<B, C>, ab: @escaping UnaryFunc<A, B>) -> UnaryFunc<A, C> {
+    { a in bc(ab(a)) }
+}
+
+func ∘<A, B, C>(bc: @escaping UnaryFunc<B, C>, ab: @escaping UnaryFunc<A, B?>) -> UnaryFunc<A, C?> {
+    { a in ab(a).map(bc) }
+}
 
 infix operator ∈: ComparisonPrecedence // Unicode 2208 element of
 
@@ -13,15 +39,23 @@ func ∈<Element>(element: Element, range: some RangeExpression<Element>) -> Boo
 }
 
 extension Array {
-    func callAll() where Element == Callback {
-        forEach { $0() }
+    static func +(array: Self, optional: Element?) -> Self {
+        optional.map { array + [$0] } ?? array
+    }
+    
+    static func +(optional: Element?, array: Self) -> Self {
+        optional.map { [$0] + array } ?? array
     }
     
     func filter<T>(_ type: T.Type) -> [T] {
         filter { $0 is T } as! [T]
     }
     
-    func filterMap<A, B>(_ transform: (A) -> (B)) -> [B] {
+    func filterForEach<T>(_ body: (T) -> ()) {
+        filter(T.self).forEach(body)
+    }
+    
+    func filterMap<A, B>(_ transform: UnaryFunc<A, B>) -> [B] {
         filter(A.self).map(transform)
     }
 }
@@ -133,7 +167,7 @@ extension NSMenuItem {
         set { objc_setAssociatedObject(self, &Self.assotiationKey, newValue, .OBJC_ASSOCIATION_RETAIN) }
     }
     
-    convenience init(title: String, isChecked: Bool = false, callback: @escaping Callback) {
+    convenience init(title: String, isChecked: Bool = false, _ callback: @escaping Callback) {
         self.init(title: title, action: #selector(callback(sender:)), keyEquivalent: "")
         self.callback = callback
         self.target = self
@@ -149,4 +183,21 @@ extension Optional {
     var asArray: [Wrapped] {
         self.map { [$0] } ?? []
     }
+}
+
+class Weak<T: AnyObject, R> {
+    weak var instance: T?
+    let function: UnaryFunc<T, R?>
+    
+    init(_ instance: T, _ function: @escaping UnaryFunc<T, R?>) {
+        self.instance = instance
+        self.function = function
+    }
+    
+    private func execute() -> R? { instance.flatMap(function) }
+    
+    func call   () -> R?                      { execute() }
+    func call   ()       where R == ()        { execute() }
+    func call   ()       where R == Callback  { execute()?() }
+    func call<P>(_ p: P) where R == Setter<P> { execute()?(p) }
 }
