@@ -14,15 +14,14 @@ private let unknownApp: String = "unknown Application"
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         NSLog("PinchBar \(repository.version), configured for: \(settings.appNames)")
         
-        statusMenu.callWhenPresetSelected = { [weak self] p in self?.changePreset(to: p) }
+        statusMenu.callWhenPresetSelected = Weak(self, AppDelegate.changePreset).call
         statusMenu.create(repository: repository, settings: settings)
         
-        eventTap.callWhenCreated = { [weak statusMenu] in statusMenu?.enableSubmenu() }
-        eventTap.start()
+        eventTap.start(callWhenCreated: Weak(statusMenu, StatusMenu.enableSubmenu).call)
         
         repository.checkForUpdates(verbose: false)
         
-        settings.defaultsChanged = activeAppChanged
+        settings.defaultsChanged = Weak(self, AppDelegate.activeAppChanged).call
         
         NSWorkspace.shared.notificationCenter
             .addObserver(self, selector: #selector(activeAppChanged),

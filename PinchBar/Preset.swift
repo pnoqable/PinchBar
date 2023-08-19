@@ -24,11 +24,11 @@ extension Preset: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
         let plist = try container.decode([String: PinchMapping].self)
-        self.init(mappings: plist.compactMapKeys { str in UInt64(str).flatMap(CGEventFlags.init) })
+        self.init(mappings: plist.compactMapKeys(CGEventFlags.init ∘ UInt64.init))
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(mappings.mapKeys { flags in "\(flags.rawValue)" })
+        try container.encode(mappings.mapKeys(String.init ∘ \.rawValue))
     }
 }
