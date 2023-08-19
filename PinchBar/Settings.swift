@@ -50,9 +50,9 @@ class Settings {
         NSLog("appNames: \(appNames.joined(separator: ", "))")
         NSLog("presetNames: \(presetNames.joined(separator: ", "))")
         
-        for case var userDefault as ObservableUserDefault in Mirror(reflecting: self).children.map(\.value) {
-            userDefault.callWhenChanged = { [weak self] in self?.callWhenMappingsChanged?() }
-        }
+        Mirror(reflecting: self).children.map(\.value)
+            .filterMap(ObservableUserDefault.setChangedCallback)
+            .callAll(with: WeakCallback(self, \.callWhenMappingsChanged).call)
     }
     
     func mappings(for appName: String) -> [EventMapping] {

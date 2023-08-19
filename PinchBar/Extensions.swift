@@ -1,6 +1,18 @@
 import Cocoa
 
 typealias Callback = () -> ()
+typealias UnaryFunc<P, R> = (P) -> R
+typealias Setter<P> = UnaryFunc<P, ()>
+
+infix operator °
+
+func °<A, B, C>(bc: @escaping UnaryFunc<B, C>, ab: @escaping UnaryFunc<A, B>) -> UnaryFunc<A, C> {
+    { bc(ab($0)) }
+}
+
+func °<A, B, C>(bc: @escaping UnaryFunc<B, C>, ab: @escaping UnaryFunc<A, B?>) -> UnaryFunc<A, C?> {
+    { ab($0).map(bc) }
+}
 
 extension Array {
     static func +(array: Self, optional: Element?) -> Self {
@@ -15,11 +27,15 @@ extension Array {
         forEach { $0() }
     }
     
+    func callAll<P>(with p: P) where Element == Setter<P> {
+        forEach { $0(p) }
+    }
+    
     func filter<T>(_ type: T.Type) -> [T] {
         filter { $0 is T } as! [T]
     }
     
-    func filterMap<A, B>(_ transform: (A) -> (B)) -> [B] {
+    func filterMap<A, B>(_ transform: UnaryFunc<A, B>) -> [B] {
         filter(A.self).map(transform)
     }
 }
@@ -146,7 +162,7 @@ extension NSMenuItem {
         set { objc_setAssociatedObject(self, &Self.assotiationKey, newValue, .OBJC_ASSOCIATION_RETAIN) }
     }
     
-    convenience init(title: String, isChecked: Bool = false, callback: @escaping Callback) {
+    convenience init(title: String, isChecked: Bool = false, _ callback: @escaping Callback) {
         self.init(title: title, action: #selector(callback(sender:)), keyEquivalent: "")
         self.callback = callback
         self.target = self
@@ -159,7 +175,7 @@ extension NSMenuItem {
 }
 
 protocol ObservableUserDefault {
-    var callWhenChanged: Callback? { get set }
+    func setChangedCallback(_ callback: Callback?)
 }
 
 @propertyWrapper
@@ -182,8 +198,6 @@ class UserDefault<T: Codable>: NSObject, ObservableUserDefault {
         self.init(wrappedValue: nil, key)
     }
     
-    var projectedValue: UserDefault { return self }
-    
     var wrappedValue: T {
         get {
             if cacheInvalid, let plist = userDefaults.object(forKey: key) {
@@ -201,10 +215,38 @@ class UserDefault<T: Codable>: NSObject, ObservableUserDefault {
         }
     }
     
+    func setChangedCallback(_ callback: Callback?) {
+        callWhenChanged = callback
+    }
+    
     override func observeValue(forKeyPath keyPath: String?, of object: Any?,
                                change: [NSKeyValueChangeKey: Any]?,
                                context: UnsafeMutableRawPointer?) {
         cacheInvalid = true
         callWhenChanged?()
     }
+}
+
+class WeakMethod<T: AnyObject, M> {
+    weak var instance: T?
+    let methodReference: UnaryFunc<T, M>
+    
+    init(_ instance: T?, _ method: @escaping UnaryFunc<T, M>) {
+        self.instance = instance
+        self.methodReference = method
+    }
+}
+
+class WeakCallback<T: AnyObject>: WeakMethod<T, Callback?> {
+    func call() { instance.flatMap(methodReference)?() }
+}
+
+extension WeakCallback {
+    convenience init<P>(_ instance: T?, _ method: @escaping UnaryFunc<T, Setter<P>?>, _ p: P) {
+        self.init(instance) { instance in { method(instance)?(p) } }
+    }
+}
+
+class WeakSetter<T: AnyObject, P>: WeakMethod<T, Setter<P>?> {
+    func set(param: P) { instance.flatMap(methodReference)?(param) }
 }

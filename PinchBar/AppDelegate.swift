@@ -12,13 +12,12 @@ private let unknownApp: String = "unknown Application"
     let statusMenu = StatusMenu()
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        statusMenu.callWhenPresetSelected = { [weak self] p in self?.changePreset(to: p) }
+        statusMenu.callWhenPresetSelected = WeakSetter(self, AppDelegate.changePreset).set
         statusMenu.create(repository: repository, settings: settings)
         
-        eventTap.callWhenCreated = { [weak statusMenu] in statusMenu?.enableSubmenu() }
-        eventTap.start()
+        eventTap.start(callWhenCreated: WeakCallback(statusMenu, StatusMenu.enableSubmenu).call)
         
-        settings.callWhenMappingsChanged = { [weak self] in self?.activeAppChanged() }
+        settings.callWhenMappingsChanged = WeakCallback(self, AppDelegate.activeAppChanged).call
         
         NSWorkspace.shared.notificationCenter
             .addObserver(self, selector: #selector(activeAppChanged),
