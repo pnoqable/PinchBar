@@ -1,4 +1,19 @@
 #import <Foundation/Foundation.h>
 
-bool MultitouchSupportStart(void);
-bool MultitouchSupportIsTouchCount(int trackPad, int mouse);
+typedef void (^Callback)();
+
+@interface Multitouch : NSObject
+
++ (bool)start;
+
++ (NSInteger)onMousepad;
++ (NSInteger)onTrackpad;
+
++ (bool)isOneAndAHalfTap;
++ (bool)isDoubleTap;
+
++ (void)setOnTrackpadTap:(Callback)callback;
+
++ (NSInteger)lastTouchCount;
+
+@end

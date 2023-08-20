@@ -1,31 +1,35 @@
 import Cocoa
 
-struct Preset {
-    let mappings: [CGEventFlags: EventMapping]
+struct Preset: EventMapping {
+    let mappings: [CGEventFlags: PinchMapping]
     
-    subscript(event: CGEvent) -> EventMapping? {
-        get { EventMapping.canTap(event) ? mappings[event.flags.purified] : nil }
+    func map(_ event: CGEvent) -> [CGEvent] {
+        mappings[event.flags.purified]?.map(event) ?? [event]
     }
-    
-    static let fontSize = Self(mappings:
-                                [.maskNoFlags: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30),
-                                 .maskCommand: .pinchToPinch()])
     
     static let cubase = Self(mappings:
                                 [.maskNoFlags: .pinchToWheel(),
                                  .maskAlternate: .pinchToKeys(flags: .maskAlternate, codeA: 5, codeB: 4),
                                  .maskCommand: .pinchToKeys(flags: .maskShift, codeA: 5, codeB: 4)])
+    
+    static let fontSize = Self(mappings:
+                                [.maskNoFlags: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30),
+                                 .maskCommand: .pinchToPinch()])
+    
+    static let fontSizeCmd = Self(mappings:
+                                    [.maskNoFlags: .pinchToPinch(),
+                                     .maskCommand: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30)])
 }
 
 extension Preset: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
-        let plist = try container.decode([String: EventMapping].self)
-        self.init(mappings: plist.compactMapKeys { str in UInt64(str).flatMap(CGEventFlags.init) })
+        let plist = try container.decode([String: PinchMapping].self)
+        self.init(mappings: plist.compactMapKeys(CGEventFlags.init ° UInt64.init))
     }
     
     func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
-        try container.encode(mappings.mapKeys { flags in "\(flags.rawValue)" })
+        try container.encode(mappings.mapKeys(String.init ° \.rawValue))
     }
 }
