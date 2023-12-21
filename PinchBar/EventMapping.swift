@@ -95,12 +95,23 @@ struct MultiTapMapping: EventMapping {
     var oneAndAHalfTapFlags: CGEventFlags
     var doubleTapFlags: CGEventFlags
     
+    static var isOneAndAHalfTap = false, isDoubleTap = false
+    
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.subtype == .magnify {
-            if Multitouch.isOneAndAHalfTap() {
-                event.flags = oneAndAHalfTapFlags
-            } else if Multitouch.isDoubleTap() {
-                event.flags = doubleTapFlags
+            if event.magnificationPhase == .began {
+                Self.isOneAndAHalfTap = Multitouch.isOneAndAHalfTap()
+                Self.isDoubleTap      = Multitouch.isDoubleTap()
+            }
+            
+            if Self.isOneAndAHalfTap {
+                return [CGEvent(flagsChangedEventSource: nil, flags: oneAndAHalfTapFlags)!,
+                        event.with(flags: oneAndAHalfTapFlags),
+                        CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
+            } else if Self.isDoubleTap {
+                return [CGEvent(flagsChangedEventSource: nil, flags: doubleTapFlags)!,
+                        event.with(flags: doubleTapFlags),
+                        CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
             }
         }
         
@@ -141,8 +152,10 @@ struct PinchMapping: EventMapping {
         
         switch replacement {
         case .wheel:
-            return [CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
-                            wheel1: Int32(steps), wheel2: 0, wheel3: 0)!.with(flags: flags)]
+            return [CGEvent(flagsChangedEventSource: nil, flags: flags)!,
+                    CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
+                            wheel1: Int32(steps), wheel2: 0, wheel3: 0)!.with(flags: flags),
+                    CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
         case .keys(let codeA, let codeB):
             let code = steps < 0 ? codeA : codeB
             return [CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: true)!,
