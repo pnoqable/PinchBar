@@ -129,9 +129,18 @@ extension CGEvent {
     }
     
     func with(flags: CGEventFlags) -> CGEvent {
-        self.flags = flags
-        return self
+        let result = self.copy()!
+        result.flags = flags
+        return result
     }
+}
+
+func CGEvent(flagsChangedEventSource source: CGEventSource?, flags: CGEventFlags ) -> CGEvent? {
+    let result = CGEvent(source: source)
+    result?.type = .flagsChanged
+    result?.flags = flags
+    result?.timestamp = DispatchTime.now().uptimeNanoseconds
+    return result
 }
 
 func CGEvent(magnifyEventSource source: CGEventSource?, magnification: Double, phase: CGEvent.Phase) -> CGEvent? {

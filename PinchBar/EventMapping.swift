@@ -80,12 +80,22 @@ struct MultiTapMapping: EventMapping {
     var oneAndAHalfTapFlags: CGEventFlags
     var doubleTapFlags: CGEventFlags
     
+    static var isOneAndAHalfTap = false, isDoubleTap = false
+    
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.subtype == .magnify {
-            if Multitouch.isOneAndAHalfTap() {
-                event.flags = oneAndAHalfTapFlags
-            } else if Multitouch.isDoubleTap() {
-                event.flags = doubleTapFlags
+            if event.magnificationPhase == .began {
+                Self.isOneAndAHalfTap = Multitouch.isOneAndAHalfTap()
+                Self.isDoubleTap      = Multitouch.isDoubleTap()
+            } else if event.magnificationPhase == .ended {
+                Self.isOneAndAHalfTap = false
+                Self.isDoubleTap      = false
+            }
+            
+            if Self.isOneAndAHalfTap {
+                return [event.with(flags: oneAndAHalfTapFlags)]
+            } else if Self.isDoubleTap {
+                return [event.with(flags: doubleTapFlags)]
             }
         }
         
@@ -122,17 +132,23 @@ struct PinchMapping: EventMapping {
         let steps = round(magnification)
         Self.remainder = magnification - steps
         
-        guard steps != 0 else { return [] }
+        if steps == 0 {
+            return event.magnificationPhase != .ended ? [] :
+            [CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
+        }
         
         switch replacement {
         case .wheel:
-            return [CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
-                            wheel1: Int32(steps), wheel2: 0, wheel3: 0)!.with(flags: flags)]
+            return [CGEvent(flagsChangedEventSource: nil, flags: flags)!,
+                    CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
+                            wheel1: Int32(steps), wheel2: 0, wheel3: 0)!.with(flags: flags),
+                    CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
         case .keys(let codeA, let codeB):
             let code = steps < 0 ? codeA : codeB
-            return [CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: true)!,
-                    CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: false)!]
-                .map { $0.with(flags: flags) }
+            return [CGEvent(flagsChangedEventSource: nil, flags: flags)!,
+                    CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: true)!.with(flags: flags),
+                    CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: false)!.with(flags: flags),
+                    CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
         }
     }
 }
