@@ -14,6 +14,7 @@ class Settings: WithUserDefaults {
         
         static let appPresets     = ["Cubase": "Cubase"]
         static let presets        = ["Cubase":        Preset.cubase,
+                                     "Cubase 13":     Preset.cubase13,
                                      "Font Size":     Preset.fontSize,
                                      "Font Size/cmd": Preset.fontSizeCmd]
     }

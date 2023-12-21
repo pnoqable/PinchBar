@@ -12,6 +12,11 @@ struct Preset: EventMapping {
                                  .maskAlternate: .pinchToKeys(flags: .maskAlternate, codeA: 5, codeB: 4),
                                  .maskCommand: .pinchToKeys(flags: .maskShift, codeA: 5, codeB: 4)])
     
+    static let cubase13 = Self(mappings:
+                                [.maskNoFlags: .pinchToWheel(),
+                                 .maskAlternate: .pinchToWheel(flags: .maskCommand.union(.maskAlternate), sensivity: 500),
+                                 .maskCommand: .pinchToWheel(flags: .maskCommand.union(.maskShift), sensivity: 500)])
+    
     static let fontSize = Self(mappings:
                                 [.maskNoFlags: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30),
                                  .maskCommand: .pinchToPinch()])
