@@ -43,6 +43,13 @@ extension CGEvent {
     var phase: Phase { Phase(rawValue: getIntegerValueField(.phase)) ?? .other }
 }
 
+func CGEvent(flagsChangedEventSource source: CGEventSource?, flags: CGEventFlags ) -> CGEvent? {
+    let result = CGEvent(source: source)
+    result?.type = .flagsChanged
+    result?.flags = flags
+    return result
+}
+
 extension Dictionary {
     func mapKeys<T>(_ transform: (Key) throws -> T) rethrows -> [T: Value] {
         try .init(uniqueKeysWithValues: map{ (k, v) in try (transform(k), v) })
