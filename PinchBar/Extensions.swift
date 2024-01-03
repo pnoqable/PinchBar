@@ -189,22 +189,23 @@ protocol ObservableUserDefault {
 
 @propertyWrapper
 class UserDefault<T: Codable>: NSObject, ObservableUserDefault {
-    let userDefaults = UserDefaults.standard
+    let userDefaults: UserDefaults
     let key: String
     var cachedValue: T
     var cacheInvalid = true
     var callWhenChanged: Callback?
     
-    init(wrappedValue: T, _ key: String) {
-        self.cachedValue = wrappedValue
-        self.key         = key
+    init(wrappedValue: T, _ key: String, _ userDefaults: String? = nil) {
+        self.userDefaults = userDefaults.map({ $0! } ° UserDefaults.init) ?? .standard
+        self.cachedValue  = wrappedValue
+        self.key          = key
         super.init()
         
-        userDefaults.addObserver(self, forKeyPath: key, context: nil)
+        self.userDefaults.addObserver(self, forKeyPath: key, context: nil)
     }
     
-    convenience init(_ key: String) where T: ExpressibleByNilLiteral {
-        self.init(wrappedValue: nil, key)
+    convenience init(_ key: String, userDefaults: String? = nil) where T: ExpressibleByNilLiteral {
+        self.init(wrappedValue: nil, key, userDefaults)
     }
     
     var wrappedValue: T {
