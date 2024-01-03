@@ -1,22 +1,23 @@
 import Cocoa
 
 class Settings: WithUserDefaults {
-    enum MappingType: String, Codable {
+    enum MappingType: String, Codable, CaseIterable {
         case middleClick, mouseZoom, multiTap
     }
     
     struct Defaults {
-        static let globalMappings: [MappingType] = [.middleClick, .mouseZoom, .multiTap]
-        static let middleClick    = MiddleClickMapping(onMousepad: 2, onTrackpad: 3)
-        static let mouseZoom      = MouseZoomMapping(sensivity: 0.005)
-        static let multiTap       = MultiTapMapping(oneAndAHalfTapFlags: .maskAlternate,
-                                                    doubleTapFlags:      .maskCommand)
+        static let globalMappings = MappingType.allCases
         
-        static let appPresets     = ["Cubase": "Cubase"]
-        static let presets        = ["Cubase":        Preset.cubase,
-                                     "Cubase 13":     Preset.cubase13,
-                                     "Font Size":     Preset.fontSize,
-                                     "Font Size/cmd": Preset.fontSizeCmd]
+        static let middleClick    = MiddleClickMapping(.init(onMousepad: 2, onTrackpad: 3))
+        static let mouseZoom      = MouseZoomMapping(  .init(sensivity: 0.005))
+        static let multiTap       = MultiTapMapping(   .init(oneAndAHalfTapFlags: .maskAlternate,
+                                                             doubleTapFlags:      .maskCommand))
+        
+        static let appPresets = ["Cubase": "Cubase"]
+        static let presets    = ["Cubase":        Preset(.cubase),
+                                 "Cubase 13":     Preset(.cubase13),
+                                 "Font Size":     Preset(.fontSize),
+                                 "Font Size/cmd": Preset(.fontSizeCmd)]
     }
     
     @UserDefault("globalMappings") var globalMappings = Defaults.globalMappings
@@ -50,7 +51,7 @@ class Settings: WithUserDefaults {
         setAllUserDefaultsChangedCallbacks(Weak(self, \.callWhenMappingsChanged).call)
     }
     
-    func mappings(for appName: String) -> [EventMapping] {
+    func mappings(for appName: String) -> [any EventMapping] {
         globalMappings.map { switch $0 {
         case .middleClick: return middleClick
         case .mouseZoom:   return mouseZoom

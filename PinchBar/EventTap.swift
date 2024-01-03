@@ -3,7 +3,7 @@ import Cocoa
 class EventTap {
     private var eventTap: CFMachPort?
     
-    var mappings: [EventMapping] = []
+    var mappings: [any EventMapping] = []
     
     func start(callWhenCreated: @escaping Callback) {
         let eventMask = CGEventMask(1<<29 | 1<<22 | 0b11110) // trackpad, scroll and click events
