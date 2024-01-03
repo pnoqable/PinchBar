@@ -36,9 +36,7 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
     private var mapMiddleClick = false
     private var skipTapEvent = false
     
-    private var isTrackpadTapActive: Bool {
-        UserDefaults(suiteName: "com.apple.AppleMultitouchTrackpad")?.bool(forKey: "Clicking") ?? false
-    }
+    @UserDefault("Clicking", "com.apple.AppleMultitouchTrackpad") var isTrackpadTapActive = false
     
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.type ∈ .leftMouseDown ... .rightMouseUp {
