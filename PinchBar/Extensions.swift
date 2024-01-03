@@ -184,11 +184,11 @@ extension Encodable {
 }
 
 extension NSMenuItem {
-    static private var assotiationKey = "callback"
+    static private var assotiationKey = "callback".data(using: .utf8)! as NSData
     
     var callback: Callback? {
-        get { objc_getAssociatedObject(self, &Self.assotiationKey) as? Callback }
-        set { objc_setAssociatedObject(self, &Self.assotiationKey, newValue, .OBJC_ASSOCIATION_RETAIN) }
+        get { objc_getAssociatedObject(self, Self.assotiationKey.bytes) as? Callback }
+        set { objc_setAssociatedObject(self, Self.assotiationKey.bytes, newValue, .OBJC_ASSOCIATION_RETAIN) }
     }
     
     convenience init(title: String, isChecked: Bool = false, _ callback: @escaping Callback) {
@@ -222,22 +222,23 @@ extension WithUserDefaults {
 
 @propertyWrapper
 class UserDefault<T: Codable>: NSObject, ObservableUserDefault {
-    let userDefaults = UserDefaults.standard
+    let userDefaults: UserDefaults
     let key: String
     var cachedValue: T
     var cacheInvalid = true
     var callWhenChanged: Callback?
     
-    init(wrappedValue: T, _ key: String) {
-        self.cachedValue = wrappedValue
-        self.key         = key
+    init(wrappedValue: T, _ key: String, _ userDefaults: String? = nil) {
+        self.userDefaults = userDefaults.map(\.unsafelyUnwrapped ∘ UserDefaults.init) ?? .standard
+        self.cachedValue  = wrappedValue
+        self.key          = key
         super.init()
         
-        userDefaults.addObserver(self, forKeyPath: key, context: nil)
+        self.userDefaults.addObserver(self, forKeyPath: key, context: nil)
     }
     
-    convenience init(_ key: String) where T: ExpressibleByNilLiteral {
-        self.init(wrappedValue: nil, key)
+    convenience init(_ key: String, userDefaults: String? = nil) where T: ExpressibleByNilLiteral {
+        self.init(wrappedValue: nil, key, userDefaults)
     }
     
     var wrappedValue: T {
