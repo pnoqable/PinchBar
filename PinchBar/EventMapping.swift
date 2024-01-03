@@ -1,17 +1,42 @@
 import Cocoa
 
 protocol EventMapping: Codable {
+    associatedtype Settings: Codable
+    var settings: Settings { get }
+    
+    init(_ settings: Settings)
+    
     func map(_ event: CGEvent) -> [CGEvent]
 }
 
-struct MiddleClickMapping: EventMapping {
-    private static var mapMiddleClick = false
-    private static var skipTapEvent = false
+extension EventMapping {
+    init(from decoder: Decoder) throws {
+        try self.init(Settings(from: decoder))
+    }
     
-    var onMousepad: Int
-    var onTrackpad: Int
+    func encode(to encoder: Encoder) throws {
+        try settings.encode(to: encoder)
+    }
+}
+
+class SettingsHolder<Settings> {
+    let settings: Settings
     
-    var isTrackpadTapActive: Bool {
+    required init(_ settings: Settings) {
+        self.settings = settings
+    }
+}
+
+class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapping {
+    struct Settings: Codable {
+        var onMousepad: Int
+        var onTrackpad: Int
+    }
+    
+    private var mapMiddleClick = false
+    private var skipTapEvent = false
+    
+    private var isTrackpadTapActive: Bool {
         UserDefaults(suiteName: "com.apple.AppleMultitouchTrackpad")?.bool(forKey: "Clicking") ?? false
     }
     
@@ -19,18 +44,18 @@ struct MiddleClickMapping: EventMapping {
         if .leftMouseDown ... .rightMouseUp ~= event.type {
             var justFinished = false
             if [.leftMouseDown, .rightMouseDown].contains(event.type),
-               onMousepad > 0 && Multitouch.onMousepad() == onMousepad
-                || onTrackpad > 0 && Multitouch.onTrackpad() == onTrackpad {
-                Self.mapMiddleClick = true
-            } else if Self.mapMiddleClick && [.leftMouseUp, .rightMouseUp].contains(event.type) {
-                Self.mapMiddleClick = false
+               settings.onMousepad > 0 && Multitouch.onMousepad() == settings.onMousepad
+                || settings.onTrackpad > 0 && Multitouch.onTrackpad() == settings.onTrackpad {
+                mapMiddleClick = true
+            } else if mapMiddleClick && [.leftMouseUp, .rightMouseUp].contains(event.type) {
+                mapMiddleClick = false
                 justFinished = true
             }
             
-            if Self.mapMiddleClick || justFinished {
+            if mapMiddleClick || justFinished {
                 event.type = [.leftMouseDown, .rightMouseDown].contains(event.type) ? .otherMouseDown : .otherMouseUp
                 event.mouseButtonNumber = 2;
-                Self.skipTapEvent = true
+                skipTapEvent = true
             }
         }
         
@@ -38,9 +63,9 @@ struct MiddleClickMapping: EventMapping {
     }
     
     func onTrackpadTap() {
-        if Self.skipTapEvent {
-            Self.skipTapEvent = false
-        } else if Multitouch.lastTouchCount() == onTrackpad && isTrackpadTapActive {
+        if skipTapEvent {
+            skipTapEvent = false
+        } else if Multitouch.lastTouchCount() == settings.onTrackpad && isTrackpadTapActive {
             let event = CGEvent(mouseEventSource: nil,
                                 mouseType: .otherMouseDown,
                                 mouseCursorPosition: CGEvent(source: nil)!.location,
@@ -53,36 +78,38 @@ struct MiddleClickMapping: EventMapping {
     }
 }
 
-struct MouseZoomMapping: EventMapping {
-    private static var mapScrollToPinch = MapScrollToPinchState()
-    private static var dropRightClick = false
+class MouseZoomMapping: SettingsHolder<MouseZoomMapping.Settings>, EventMapping {
+    struct Settings: Codable {
+        var sensivity: Double
+    }
     
-    var sensivity: Double
+    private var mapScrollToPinch = MapScrollToPinchState()
+    private var dropRightClick = false
     
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.type == .scrollWheel {
-            let transition = Self.mapScrollToPinch.feed(event)
+            let transition = mapScrollToPinch.feed(event)
             
-            if Self.mapScrollToPinch.state == .mapping || transition == .finishMapping {
+            if mapScrollToPinch.state == .mapping || transition == .finishMapping {
                 guard event.scrollPhase != .other else { return [] }
                 return [CGEvent(magnifyEventSource: nil,
-                                magnification: sensivity * Double(event.scrollPointDeltaAxis1),
+                                magnification: settings.sensivity * Double(event.scrollPointDeltaAxis1),
                                 phase: event.scrollPhase)!.with(flags: event.flags)]
-            } else if Self.mapScrollToPinch.state.isDropState || transition == .finishDropping {
+            } else if mapScrollToPinch.state.isDropState || transition == .finishDropping {
                 return []
             }
         }
         
         if .rightMouseDown ... .rightMouseUp ~= event.type {
             var justFinished = false
-            if event.type == .rightMouseDown && Self.mapScrollToPinch.state == .mapping {
-                Self.dropRightClick = true
-            } else if Self.dropRightClick && event.type == .rightMouseUp {
-                Self.dropRightClick = false
+            if event.type == .rightMouseDown && mapScrollToPinch.state == .mapping {
+                dropRightClick = true
+            } else if dropRightClick && event.type == .rightMouseUp {
+                dropRightClick = false
                 justFinished = true
             }
             
-            if Self.dropRightClick || justFinished {
+            if dropRightClick || justFinished {
                 return []
             }
         }
@@ -91,26 +118,29 @@ struct MouseZoomMapping: EventMapping {
     }
 }
 
-struct MultiTapMapping: EventMapping {
-    var oneAndAHalfTapFlags: CGEventFlags
-    var doubleTapFlags: CGEventFlags
+class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
+    struct Settings: Codable {
+        var oneAndAHalfTapFlags: CGEventFlags
+        var doubleTapFlags: CGEventFlags
+    }
     
-    static var isOneAndAHalfTap = false, isDoubleTap = false
+    private var isOneAndAHalfTap = false
+    private var isDoubleTap = false
     
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.subtype == .magnify {
             if event.magnificationPhase == .began {
-                Self.isOneAndAHalfTap = Multitouch.isOneAndAHalfTap()
-                Self.isDoubleTap      = Multitouch.isDoubleTap()
+                isOneAndAHalfTap = Multitouch.isOneAndAHalfTap()
+                isDoubleTap      = Multitouch.isDoubleTap()
             }
             
-            if Self.isOneAndAHalfTap {
-                return [CGEvent(flagsChangedEventSource: nil, flags: oneAndAHalfTapFlags)!,
-                        event.with(flags: oneAndAHalfTapFlags),
+            if isOneAndAHalfTap {
+                return [CGEvent(flagsChangedEventSource: nil, flags: settings.oneAndAHalfTapFlags)!,
+                        event.with(flags: settings.oneAndAHalfTapFlags),
                         CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
-            } else if Self.isDoubleTap {
-                return [CGEvent(flagsChangedEventSource: nil, flags: doubleTapFlags)!,
-                        event.with(flags: doubleTapFlags),
+            } else if isDoubleTap {
+                return [CGEvent(flagsChangedEventSource: nil, flags: settings.doubleTapFlags)!,
+                        event.with(flags: settings.doubleTapFlags),
                         CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
             }
         }
@@ -119,53 +149,55 @@ struct MultiTapMapping: EventMapping {
     }
 }
 
-struct PinchMapping: EventMapping {
-    enum Replacement: Codable {
-        case wheel
-        case keys(codeA: CGKeyCode, codeB: CGKeyCode)
+class PinchMapping: SettingsHolder<PinchMapping.Settings>, EventMapping {
+    struct Settings: Codable {
+        enum Replacement: Codable {
+            case wheel
+            case keys(codeA: CGKeyCode, codeB: CGKeyCode)
+        }
+        
+        var replaceWith: Replacement?
+        var flags: CGEventFlags
+        var sensivity: Double
     }
     
-    var replaceWith: Replacement?
-    var flags: CGEventFlags
-    var sensivity: Double
-    
-    private static var remainder: Double = 0 // subpixel residue of sent (integer) scroll events
+    private var remainder: Double = 0 // subpixel residue of sent (integer) scroll events
     
     func map(_ event: CGEvent) -> [CGEvent] {
         guard event.subtype == .magnify else { return [event] }
         
         // when event is not to be replaced, just apply flags and sensivity:
-        guard let replacement = replaceWith else {
-            event.magnification *= sensivity
-            return [event.with(flags: flags)]
+        guard let replacement = settings.replaceWith else {
+            event.magnification *= settings.sensivity
+            return [event.with(flags: settings.flags)]
         }
         
         if event.magnificationPhase == .began {
-            Self.remainder = 0
+            remainder = 0
         }
         
-        let magnification = sensivity * event.magnification + Self.remainder
+        let magnification = settings.sensivity * event.magnification + remainder
         let steps = round(magnification)
-        Self.remainder = magnification - steps
+        remainder = magnification - steps
         
         guard steps != 0 else { return [] }
         
         switch replacement {
         case .wheel:
-            return [CGEvent(flagsChangedEventSource: nil, flags: flags)!,
+            return [CGEvent(flagsChangedEventSource: nil, flags: settings.flags)!,
                     CGEvent(scrollWheelEvent2Source: nil, units: .pixel, wheelCount: 1,
-                            wheel1: Int32(steps), wheel2: 0, wheel3: 0)!.with(flags: flags),
+                            wheel1: Int32(steps), wheel2: 0, wheel3: 0)!.with(flags: settings.flags),
                     CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
         case .keys(let codeA, let codeB):
             let code = steps < 0 ? codeA : codeB
             return [CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: true)!,
                     CGEvent(keyboardEventSource: nil, virtualKey: code, keyDown: false)!]
-                .map { $0.with(flags: flags) }
+                .map { $0.with(flags: settings.flags) }
         }
     }
 }
 
-extension PinchMapping {
+extension PinchMapping.Settings {
     static func pinchToPinch(flags: CGEventFlags = .maskNoFlags, sensivity: Double = 1) -> Self {
         Self(replaceWith: nil, flags: flags, sensivity: sensivity)
     }
@@ -174,8 +206,8 @@ extension PinchMapping {
         Self(replaceWith: .wheel, flags: flags, sensivity: sensivity)
     }
     
-    static func pinchToKeys(flags: CGEventFlags = .maskCommand, sensivity: Double = 5,
-                            codeA: CGKeyCode = 44, codeB: CGKeyCode = 30) -> Self {
+    static func pinchToKeys(codeA: CGKeyCode = 44, codeB: CGKeyCode = 30,
+                            flags: CGEventFlags = .maskCommand, sensivity: Double = 5) -> Self {
         Self(replaceWith: .keys(codeA: codeA, codeB: codeB), flags: flags, sensivity: sensivity)
     }
 }

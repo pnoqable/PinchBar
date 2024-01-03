@@ -7,16 +7,16 @@ class Settings {
     
     struct Defaults {
         static let globalMappings: [MappingType] = [.middleClick, .mouseZoom, .multiTap]
-        static let middleClick    = MiddleClickMapping(onMousepad: 2, onTrackpad: 3)
-        static let mouseZoom      = MouseZoomMapping(sensivity: 0.005)
-        static let multiTap       = MultiTapMapping(oneAndAHalfTapFlags: .maskAlternate,
-                                                    doubleTapFlags:      .maskCommand)
+        static var middleClick: MiddleClickMapping { .init(.init(onMousepad: 2, onTrackpad: 3)) }
+        static var mouseZoom:   MouseZoomMapping   { .init(.init(sensivity: 0.005)) }
+        static var multiTap:    MultiTapMapping    { .init(.init(oneAndAHalfTapFlags: .maskAlternate,
+                                                                 doubleTapFlags:      .maskCommand)) }
         
-        static let appPresets     = ["Cubase": "Cubase"]
-        static let presets        = ["Cubase":        Preset.cubase,
-                                     "Cubase 13":     Preset.cubase13,
-                                     "Font Size":     Preset.fontSize,
-                                     "Font Size/cmd": Preset.fontSizeCmd]
+        static let appPresets = ["Cubase": "Cubase"]
+        static var presets : [String: Preset] { ["Cubase":        .init(.cubase),
+                                                 "Cubase 13":     .init(.cubase13),
+                                                 "Font Size":     .init(.fontSize),
+                                                 "Font Size/cmd": .init(.fontSizeCmd)] }
     }
     
     @UserDefault("globalMappings") var globalMappings = Defaults.globalMappings
@@ -56,7 +56,7 @@ class Settings {
             .callAll(with: WeakCallback(self, \.callWhenMappingsChanged).call)
     }
     
-    func mappings(for appName: String) -> [EventMapping] {
+    func mappings(for appName: String) -> [any EventMapping] {
         globalMappings.map { switch $0 {
         case .middleClick: return middleClick
         case .mouseZoom:   return mouseZoom
