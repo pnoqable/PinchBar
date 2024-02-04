@@ -5,19 +5,15 @@ private let unknownApp: String = "unknown Application"
 @main class AppDelegate: NSObject, NSApplicationDelegate {
     var activeApp: String = unknownApp
     
-    let eventTap = EventTap()
     let repository = Repository()
     let settings = Settings()
     
-    let statusMenu = StatusMenu()
+    lazy var eventTap = EventTap(callWhenStarted: WeakCallback(statusMenu, StatusMenu.enableSubmenu).call)
+    lazy var statusMenu = StatusMenu(repository: repository, settings: settings)
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        statusMenu.callWhenPresetSelected = WeakSetter(self, AppDelegate.changePreset).set
-        statusMenu.create(repository: repository, settings: settings)
-        
-        eventTap.start(callWhenCreated: WeakCallback(statusMenu, StatusMenu.enableSubmenu).call)
-        
         settings.callWhenMappingsChanged = WeakCallback(self, AppDelegate.activeAppChanged).call
+        statusMenu.callWhenPresetSelected = WeakSetter(self, AppDelegate.changePreset).set
         
         NSWorkspace.shared.notificationCenter
             .addObserver(self, selector: #selector(activeAppChanged),
