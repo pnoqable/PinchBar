@@ -1,15 +1,15 @@
 import Cocoa
 
 class StatusMenu {
-    var statusItem: NSStatusItem!
-    var menuItemPreferences: NSMenuItem!
-    var menuItemConfigure: NSMenuItem!
+    var statusItem: NSStatusItem
+    var menuItemPreferences: NSMenuItem
+    var menuItemConfigure: NSMenuItem
     
     weak var settings: Settings?
     
     var callWhenPresetSelected: Setter<String?>?
     
-    func create(repository: Repository, settings: Settings) {
+    init(repository: Repository, settings: Settings) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         statusItem.button?.image = NSImage(named: "StatusIcon")
         statusItem.button?.toolTip = "PinchBar"

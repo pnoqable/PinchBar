@@ -5,7 +5,16 @@ class EventTap {
     
     var mappings: [any EventMapping] = []
     
-    func start(callWhenCreated: @escaping Callback) {
+    init(callWhenStarted: @escaping Callback) {
+        start(callWhenStarted: callWhenStarted)
+    }
+    
+    deinit {
+        // don't release members of this class, call NSApplication.shared.stop() instead.
+        fatalError("ressources leaked")
+    }
+    
+    private func start(callWhenStarted: @escaping Callback) {
         let eventMask = CGEventMask(1<<29 | 1<<22 | 0b11110) // trackpad, scroll and click events
         
         let adapter: CGEventTapCallBack = { proxy, _, event, userInfo in
@@ -23,13 +32,13 @@ class EventTap {
                                      userInfo: mySelf)
         
         guard let eventTap else {
-            let work = Weak(self, EventTap.start <- callWhenCreated).call
-            return DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: work)
+            let restart = Weak(self, EventTap.start <- callWhenStarted).call
+            return DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: restart)
         }
         
         let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
-        callWhenCreated()
+        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        callWhenStarted()
         
         Multitouch.setOnTrackpadTap {
             [weak self] in self?.mappings.filterForEach(MiddleClickMapping.onTrackpadTap <- ())
