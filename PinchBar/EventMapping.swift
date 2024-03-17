@@ -36,10 +36,14 @@ struct EventMapping: Codable {
             
         switch replacement {
         case .wheel:
+            let originalFlags = event.flags
             let event = CGEvent(scrollWheelEvent2Source: nil, units: .pixel,
                                 wheelCount: 1, wheel1: Int32(steps), wheel2: 0, wheel3: 0)!
             event.flags = flags
-            return .passRetained(event)
+            CGEvent(flagsChangedEventSource: nil, flags: flags)!.tapPostEvent(proxy)
+            event.tapPostEvent(proxy)
+            CGEvent(flagsChangedEventSource: nil, flags: originalFlags)?.tapPostEvent(proxy)
+            return nil
         case .keys(let codeA, let codeB):
             let code = steps < 0 ? codeA : codeB
             sendKey(code, down: true, proxy: proxy)
