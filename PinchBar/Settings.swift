@@ -2,16 +2,18 @@ import Cocoa
 
 class Settings: WithUserDefaults {
     enum MappingType: String, Codable, CaseIterable {
-        case middleClick, mouseZoom, multiTap
+        case magicMouseZoom, middleClick, multiTap, otherMouseZoom
     }
     
     struct Defaults {
         static let globalMappings = MappingType.allCases
         
-        static let middleClick    = MiddleClickMapping(.init(onMousepad: 2, onTrackpad: 3))
-        static let mouseZoom      = MouseZoomMapping(  .init(sensivity: 0.005))
-        static let multiTap       = MultiTapMapping(   .init(oneAndAHalfTapFlags: .maskAlternate,
-                                                             doubleTapFlags:      .maskCommand))
+        static let magicMouseZoom = MagicMouseZoomMapping(.init(sensivity: 0.005))
+        static let middleClick    = MiddleClickMapping(   .init(onMousepad: 2, onTrackpad: 3))
+        static let multiTap       = MultiTapMapping(      .init(oneAndAHalfTapFlags: .maskAlternate,
+                                                                doubleTapFlags:      .maskCommand))
+        static let otherMouseZoom = OtherMouseZoomMapping(.init(button: .center, noClicks: false,
+                                                                sensivity: 0.003, minimalDrag: 2))
         
         static let appPresets = ["Cubase": "Cubase"]
         static let presets    = ["Cubase":        Preset(.cubase),
@@ -21,9 +23,10 @@ class Settings: WithUserDefaults {
     }
     
     @UserDefault("globalMappings") var globalMappings = Defaults.globalMappings
+    @UserDefault("magicMouseZoom") var magicMouseZoom = Defaults.magicMouseZoom
     @UserDefault("middleClick")    var middleClick    = Defaults.middleClick
-    @UserDefault("mouseZoom")      var mouseZoom      = Defaults.mouseZoom
     @UserDefault("multiTap")       var multiTap       = Defaults.multiTap
+    @UserDefault("otherMouseZoom") var otherMouseZoom = Defaults.otherMouseZoom
     @UserDefault("appPresets")     var appPresets     = Defaults.appPresets
     @UserDefault("presets")        var presets        = Defaults.presets
     
@@ -36,9 +39,10 @@ class Settings: WithUserDefaults {
     init() {
         // write global mappings to user defaults:
         self.globalMappings = globalMappings
+        self.magicMouseZoom = magicMouseZoom
         self.middleClick    = middleClick
-        self.mouseZoom      = mouseZoom
         self.multiTap       = multiTap
+        self.otherMouseZoom = otherMouseZoom
         
         // upgrade path: merge customized/user presets with newly added default presets
         appPresets.merge(Defaults.appPresets, uniquingKeysWith: { userPreset, _ in userPreset })
@@ -53,9 +57,10 @@ class Settings: WithUserDefaults {
     
     func mappings(for appName: String) -> [any EventMapping] {
         globalMappings.map { switch $0 {
-        case .middleClick: return middleClick
-        case .mouseZoom:   return mouseZoom
-        case .multiTap:    return multiTap
+        case .magicMouseZoom: return magicMouseZoom
+        case .middleClick:    return middleClick
+        case .multiTap:       return multiTap
+        case .otherMouseZoom: return otherMouseZoom
         } } + presets[appPresets[appName]]
     }
 }

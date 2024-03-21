@@ -94,10 +94,22 @@ extension CGEvent {
         case ended = 4
     }
     
-    var mouseButtonNumber: Int64 {
-        get { getIntegerValueField(.mouseEventButtonNumber) }
-        set { setIntegerValueField(.mouseEventButtonNumber, value: newValue) }
+    var mouseButton: CGMouseButton {
+        get { .init(rawValue: UInt32(getIntegerValueField(.mouseEventButtonNumber)))! }
+        set { setIntegerValueField(.mouseEventButtonNumber, value: Int64(newValue.rawValue)) }
     }
+    
+    var mouseDeltaX: Int64 {
+        get { getIntegerValueField(.mouseEventDeltaX) }
+        set { setIntegerValueField(.mouseEventDeltaX, value: newValue) }
+    }
+    
+    var mouseDeltaY: Int64 {
+        get { getIntegerValueField(.mouseEventDeltaY) }
+        set { setIntegerValueField(.mouseEventDeltaY, value: newValue) }
+    }
+    
+    var mouseDeltaSumAbs: Int64 { abs(mouseDeltaX) + abs(mouseDeltaY) }
     
     var scrollPointDeltaAxis1: Int64 {
         get { getIntegerValueField(.scrollWheelEventPointDeltaAxis1) }
@@ -152,6 +164,8 @@ func CGEvent(magnifyEventSource source: CGEventSource?, magnification: Double, p
     result?.timestamp = DispatchTime.now().uptimeNanoseconds
     return result
 }
+
+extension CGMouseButton: Codable {}
 
 extension Decodable {
     init(fromPlist obj: Any, options: JSONSerialization.WritingOptions = .fragmentsAllowed) throws {

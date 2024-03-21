@@ -27,6 +27,31 @@ class SettingsHolder<Settings> {
     }
 }
 
+class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, EventMapping {
+    struct Settings: Codable {
+        var sensivity: Double
+    }
+    
+    private var mapScrollToPinch = MapScrollToPinchState()
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.type == .scrollWheel {
+            let transition = mapScrollToPinch.feed(event)
+            
+            if mapScrollToPinch.state == .mapping || transition == .finishMapping {
+                guard event.scrollPhase != .other else { return [] }
+                return [CGEvent(magnifyEventSource: nil,
+                                magnification: settings.sensivity * Double(event.scrollPointDeltaAxis1),
+                                phase: event.scrollPhase)!.with(flags: event.flags)]
+            } else if mapScrollToPinch.state.isDropState || transition == .finishDropping {
+                return []
+            }
+        }
+        
+        return [event]
+    }
+}
+
 class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapping {
     struct Settings: Codable {
         var onMousepad: Int
@@ -52,9 +77,14 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
             
             if mapMiddleClick || justFinished {
                 event.type = event.type ∈ [.leftMouseDown, .rightMouseDown] ? .otherMouseDown : .otherMouseUp
-                event.mouseButtonNumber = 2;
+                event.mouseButton = .center
                 skipTapEvent = true
             }
+        }
+        
+        if mapMiddleClick && event.type ∈ [.leftMouseDragged, .rightMouseDragged] {
+            event.type = .otherMouseDragged
+            event.mouseButton = .center
         }
         
         return [event]
@@ -73,31 +103,6 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
             event.type = .otherMouseUp
             event.post(tap: .cghidEventTap)
         }
-    }
-}
-
-class MouseZoomMapping: SettingsHolder<MouseZoomMapping.Settings>, EventMapping {
-    struct Settings: Codable {
-        var sensivity: Double
-    }
-    
-    private var mapScrollToPinch = MapScrollToPinchState()
-    
-    func map(_ event: CGEvent) -> [CGEvent] {
-        if event.type == .scrollWheel {
-            let transition = mapScrollToPinch.feed(event)
-            
-            if mapScrollToPinch.state == .mapping || transition == .finishMapping {
-                guard event.scrollPhase != .other else { return [] }
-                return [CGEvent(magnifyEventSource: nil,
-                                magnification: settings.sensivity * Double(event.scrollPointDeltaAxis1),
-                                phase: event.scrollPhase)!.with(flags: event.flags)]
-            } else if mapScrollToPinch.state.isDropState || transition == .finishDropping {
-                return []
-            }
-        }
-        
-        return [event]
     }
 }
 
@@ -124,6 +129,64 @@ class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
                 return [event.with(flags: settings.oneAndAHalfTapFlags)]
             } else if isDoubleTap {
                 return [event.with(flags: settings.doubleTapFlags)]
+            }
+        }
+        
+        return [event]
+    }
+}
+
+class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, EventMapping {
+    struct Settings: Codable {
+        var button: CGMouseButton
+        var noClicks: Bool
+        var sensivity: Double
+        var minimalDrag: Int
+    }
+    
+    private var clickLocation: CGPoint? = nil
+    private var mapScrollToPinch = false
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.type ==  .otherMouseDown, event.mouseButton == settings.button {
+            clickLocation = event.location
+            mapScrollToPinch = false
+            if settings.noClicks {
+                return []
+            }
+        } else if event.type == .otherMouseUp, event.mouseButton == settings.button {
+            clickLocation = nil
+            if mapScrollToPinch {
+                mapScrollToPinch = false
+                return [CGEvent(magnifyEventSource: nil, magnification: 0, phase: .ended)!.with(flags: event.flags)]
+            } else if settings.noClicks {
+                return []
+            }
+        } else if let lastLocation = clickLocation, event.type == .otherMouseDragged,
+                  event.mouseButton == settings.button {
+            clickLocation = event.location
+            if settings.noClicks {
+                return []
+            } else if mapScrollToPinch, event.mouseDeltaSumAbs >= settings.minimalDrag {
+                mapScrollToPinch = false
+                return [CGEvent(mouseEventSource: nil, mouseType: .otherMouseDown,
+                                mouseCursorPosition: lastLocation, mouseButton: settings.button)!.with(flags: event.flags),
+                        event]
+            }
+        } else if let clickLocation, event.type == .scrollWheel {
+            guard event.scrollPhase == .other else { return [] }
+            let zoom = settings.sensivity * Double(event.scrollPointDeltaAxis1)
+            if !mapScrollToPinch {
+                mapScrollToPinch = true
+                if settings.noClicks {
+                    return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!]
+                } else {
+                    return [CGEvent(mouseEventSource: nil, mouseType: .otherMouseUp,
+                                    mouseCursorPosition: clickLocation, mouseButton: settings.button)!,
+                            CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!]
+                }
+            } else {
+                return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .changed)!]
             }
         }
         

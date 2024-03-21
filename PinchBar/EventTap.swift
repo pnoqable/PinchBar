@@ -15,7 +15,7 @@ class EventTap {
     }
     
     private func start(callWhenStarted: @escaping Callback) {
-        let eventMask = CGEventMask(1<<29 | 1<<22 | 0b11110) // trackpad, scroll and click events
+        let eventMask = CGEventMask(1<<29 | 1<<22 | 0b111<<25 | 0b11011110) // trackpad, scroll, click and drag events
         
         let adapter: CGEventTapCallBack = { proxy, _, event, userInfo in
             Unmanaged<EventTap>.fromOpaque(userInfo!).takeUnretainedValue().tap(event, proxy)
