@@ -27,56 +27,7 @@ class SettingsHolder<Settings> {
     }
 }
 
-class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapping {
-    struct Settings: Codable {
-        var onMousepad: Int
-        var onTrackpad: Int
-    }
-    
-    private var mapMiddleClick = false
-    private var skipTapEvent = false
-    
-    @UserDefault("Clicking", "com.apple.AppleMultitouchTrackpad") var isTrackpadTapActive = false
-    
-    func map(_ event: CGEvent) -> [CGEvent] {
-        if .leftMouseDown ... .rightMouseUp ~= event.type {
-            var justFinished = false
-            if [.leftMouseDown, .rightMouseDown].contains(event.type),
-               settings.onMousepad > 0 && Multitouch.onMousepad() == settings.onMousepad
-                || settings.onTrackpad > 0 && Multitouch.onTrackpad() == settings.onTrackpad {
-                mapMiddleClick = true
-            } else if mapMiddleClick && [.leftMouseUp, .rightMouseUp].contains(event.type) {
-                mapMiddleClick = false
-                justFinished = true
-            }
-            
-            if mapMiddleClick || justFinished {
-                event.type = [.leftMouseDown, .rightMouseDown].contains(event.type) ? .otherMouseDown : .otherMouseUp
-                event.mouseButtonNumber = 2;
-                skipTapEvent = true
-            }
-        }
-        
-        return [event]
-    }
-    
-    func onTrackpadTap() {
-        if skipTapEvent {
-            skipTapEvent = false
-        } else if Multitouch.lastTouchCount() == settings.onTrackpad && isTrackpadTapActive {
-            let event = CGEvent(mouseEventSource: nil,
-                                mouseType: .otherMouseDown,
-                                mouseCursorPosition: CGEvent(source: nil)!.location,
-                                mouseButton: .center)!
-            
-            event.post(tap: .cghidEventTap)
-            event.type = .otherMouseUp
-            event.post(tap: .cghidEventTap)
-        }
-    }
-}
-
-class MouseZoomMapping: SettingsHolder<MouseZoomMapping.Settings>, EventMapping {
+class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, EventMapping {
     struct Settings: Codable {
         var sensivity: Double
     }
@@ -116,6 +67,60 @@ class MouseZoomMapping: SettingsHolder<MouseZoomMapping.Settings>, EventMapping 
     }
 }
 
+class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapping {
+    struct Settings: Codable {
+        var onMousepad: Int
+        var onTrackpad: Int
+    }
+    
+    private var mapMiddleClick = false
+    private var skipTapEvent = false
+    
+    @UserDefault("Clicking", "com.apple.AppleMultitouchTrackpad") var isTrackpadTapActive = false
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if .leftMouseDown ... .rightMouseUp ~= event.type {
+            var justFinished = false
+            if [.leftMouseDown, .rightMouseDown].contains(event.type),
+               settings.onMousepad > 0 && Multitouch.onMousepad() == settings.onMousepad
+                || settings.onTrackpad > 0 && Multitouch.onTrackpad() == settings.onTrackpad {
+                mapMiddleClick = true
+            } else if mapMiddleClick && [.leftMouseUp, .rightMouseUp].contains(event.type) {
+                mapMiddleClick = false
+                justFinished = true
+            }
+            
+            if mapMiddleClick || justFinished {
+                event.type = [.leftMouseDown, .rightMouseDown].contains(event.type) ? .otherMouseDown : .otherMouseUp
+                event.mouseButton = .center
+                skipTapEvent = true
+            }
+        }
+        
+        if mapMiddleClick && [.leftMouseDragged, .rightMouseDragged].contains(event.type) {
+            event.type = .otherMouseDragged
+            event.mouseButton = .center
+        }
+        
+        return [event]
+    }
+    
+    func onTrackpadTap() {
+        if skipTapEvent {
+            skipTapEvent = false
+        } else if Multitouch.lastTouchCount() == settings.onTrackpad && isTrackpadTapActive {
+            let event = CGEvent(mouseEventSource: nil,
+                                mouseType: .otherMouseDown,
+                                mouseCursorPosition: CGEvent(source: nil)!.location,
+                                mouseButton: .center)!
+            
+            event.post(tap: .cghidEventTap)
+            event.type = .otherMouseUp
+            event.post(tap: .cghidEventTap)
+        }
+    }
+}
+
 class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
     struct Settings: Codable {
         var oneAndAHalfTapFlags: CGEventFlags
@@ -140,6 +145,64 @@ class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
                 return [CGEvent(flagsChangedEventSource: nil, flags: settings.doubleTapFlags)!,
                         event.with(flags: settings.doubleTapFlags),
                         CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
+            }
+        }
+        
+        return [event]
+    }
+}
+
+class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, EventMapping {
+    struct Settings: Codable {
+        var button: CGMouseButton
+        var noClicks: Bool
+        var sensivity: Double
+        var minimalDrag: Int
+    }
+    
+    private var clickLocation: CGPoint? = nil
+    private var mapScrollToPinch = false
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.type ==  .otherMouseDown, event.mouseButton == settings.button {
+            clickLocation = event.location
+            mapScrollToPinch = false
+            if settings.noClicks {
+                return []
+            }
+        } else if event.type == .otherMouseUp, event.mouseButton == settings.button {
+            clickLocation = nil
+            if mapScrollToPinch {
+                mapScrollToPinch = false
+                return [CGEvent(magnifyEventSource: nil, magnification: 0, phase: .ended)!]
+            } else if settings.noClicks {
+                return []
+            }
+        } else if let lastLocation = clickLocation, event.type == .otherMouseDragged,
+                  event.mouseButton == settings.button {
+            clickLocation = event.location
+            if settings.noClicks {
+                return []
+            } else if mapScrollToPinch, event.mouseDeltaSumAbs >= settings.minimalDrag {
+                mapScrollToPinch = false
+                return [CGEvent(mouseEventSource: nil, mouseType: .otherMouseDown,
+                                mouseCursorPosition: lastLocation, mouseButton: settings.button)!,
+                        event]
+            }
+        } else if let clickLocation, event.type == .scrollWheel {
+            guard event.scrollPhase == .other else { return [] }
+            let zoom = settings.sensivity * Double(event.scrollPointDeltaAxis1)
+            if !mapScrollToPinch {
+                mapScrollToPinch = true
+                if settings.noClicks {
+                    return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!]
+                } else {
+                    return [CGEvent(mouseEventSource: nil, mouseType: .otherMouseUp,
+                                    mouseCursorPosition: clickLocation, mouseButton: settings.button)!,
+                            CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!]
+                }
+            } else {
+                return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .changed)!]
             }
         }
         

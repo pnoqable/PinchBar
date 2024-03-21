@@ -178,11 +178,11 @@ static bool registerMultitouchDeviceAddedCallback(void) {
 }
 
 + (bool)isOneAndAHalfTap {
-    return lastTouchCounts == std::vector{1};
+    return touchCount && lastTouchCounts == std::vector{1};
 }
 
 + (bool)isDoubleTap {
-    return lastTouchCounts == std::vector{touchCount};
+    return touchCount && lastTouchCounts == std::vector{touchCount};
 }
 
 + (void)setOnTrackpadTap:(Callback)callback {
