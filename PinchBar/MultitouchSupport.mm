@@ -186,12 +186,12 @@ static bool registerMultitouchDeviceAddedCallback(void) {
 
 + (bool)isOneAndAHalfTap {
     std::lock_guard lock(mutex);
-    return lastTouchCounts == std::vector{1};
+    return touchCount && lastTouchCounts == std::vector{1};
 }
 
 + (bool)isDoubleTap {
     std::lock_guard lock(mutex);
-    return lastTouchCounts == std::vector{touchCount};
+    return touchCount && lastTouchCounts == std::vector{touchCount};
 }
 
 + (void)setOnTrackpadTap:(Callback)callback {
