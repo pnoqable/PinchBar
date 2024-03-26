@@ -2,15 +2,17 @@ import Cocoa
 
 class Settings {
     enum MappingType: String, Codable {
-        case magicMouseZoom, middleClick, multiTap, otherMouseZoom
+        case magicMouseZoom, middleClick, multiTap, otherMouseHori, otherMouseZoom
     }
     
     struct Defaults {
-        static let globalMappings: [MappingType] = [.magicMouseZoom, .middleClick, .multiTap, .otherMouseZoom]
+        static let globalMappings: [MappingType] = [.magicMouseZoom, .middleClick, .multiTap,
+                                                    .otherMouseHori, .otherMouseZoom]
         static var magicMouseZoom: MagicMouseZoomMapping { .init(.init(sensivity: 0.005)) }
         static var middleClick:    MiddleClickMapping    { .init(.init(onMousepad: 2, onTrackpad: 3)) }
         static var multiTap:       MultiTapMapping       { .init(.init(oneAndAHalfTapFlags: .maskAlternate,
                                                                        doubleTapFlags:      .maskCommand)) }
+        static var otherMouseHori: OtherMouseHoriScroll  { .init(.init(button: .fourth, noClicks: true))}
         static var otherMouseZoom: OtherMouseZoomMapping { .init(.init(button: .center, noClicks: false,
                                                                        sensivity: 0.003, minimalDrag: 2,
                                                                        doubleClickFlags: .maskCommand,
@@ -27,6 +29,7 @@ class Settings {
     @UserDefault("magicMouseZoom") var magicMouseZoom = Defaults.magicMouseZoom
     @UserDefault("middleClick")    var middleClick    = Defaults.middleClick
     @UserDefault("multiTap")       var multiTap       = Defaults.multiTap
+    @UserDefault("otherMouseHori") var otherMouseHori = Defaults.otherMouseHori
     @UserDefault("otherMouseZoom") var otherMouseZoom = Defaults.otherMouseZoom
     @UserDefault("appPresets")     var appPresets     = Defaults.appPresets
     @UserDefault("presets")        var presets        = Defaults.presets
@@ -43,6 +46,7 @@ class Settings {
         self.magicMouseZoom = magicMouseZoom
         self.middleClick    = middleClick
         self.multiTap       = multiTap
+        self.otherMouseHori = otherMouseHori
         self.otherMouseZoom = otherMouseZoom
         
         // upgrade path: merge customized/user presets with newly added default presets
@@ -67,6 +71,7 @@ class Settings {
         case .magicMouseZoom: return magicMouseZoom
         case .middleClick:    return middleClick
         case .multiTap:       return multiTap
+        case .otherMouseHori: return otherMouseHori
         case .otherMouseZoom: return otherMouseZoom
         } } + presets[appPresets[appName]]
     }
