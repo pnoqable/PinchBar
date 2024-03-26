@@ -116,9 +116,23 @@ extension CGEvent {
     
     var mouseDeltaSumAbs: Int64 { abs(mouseDeltaX) + abs(mouseDeltaY) }
     
+    var scrollDeltaAxis1: Int64 {
+        get { getIntegerValueField(.scrollWheelEventDeltaAxis1) }
+        set { setIntegerValueField(.scrollWheelEventDeltaAxis1, value: newValue) }
+    }
+    
     var scrollPointDeltaAxis1: Int64 {
         get { getIntegerValueField(.scrollWheelEventPointDeltaAxis1) }
         set { setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: newValue) }
+    }
+    
+    var scrollUnit: CGScrollEventUnit {
+        get { getIntegerValueField(.scrollWheelEventIsContinuous) != 0 ? .pixel : .line }
+        set { setIntegerValueField(.scrollWheelEventIsContinuous, value: newValue == .pixel ? 1 : 0) }
+    }
+    
+    var scrollUnitsDeltaAxis1: Int32 {
+        get { Int32(scrollUnit == .pixel ? scrollPointDeltaAxis1 : scrollDeltaAxis1) }
     }
     
     var scrollPhase: Phase {
@@ -170,7 +184,10 @@ func CGEvent(magnifyEventSource source: CGEventSource?, magnification: Double, p
     return result
 }
 
-extension CGMouseButton: Codable {}
+extension CGMouseButton: Codable {
+    static let fourth = Self(rawValue: 3)!
+    static let fifth  = Self(rawValue: 4)!
+}
 
 extension Decodable {
     init(fromPlist obj: Any, options: JSONSerialization.WritingOptions = .fragmentsAllowed) throws {
