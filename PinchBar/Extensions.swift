@@ -79,6 +79,11 @@ extension CGEvent {
         set { setIntegerValueField(.mouseEventButtonNumber, value: Int64(newValue.rawValue)) }
     }
     
+    var mouseClickState: Int64 {
+        get { getIntegerValueField(.mouseEventClickState) }
+        set { setIntegerValueField(.mouseEventClickState, value: newValue) }
+    }
+    
     var mouseDeltaX: Int64 {
         get { getIntegerValueField(.mouseEventDeltaX) }
         set { setIntegerValueField(.mouseEventDeltaX, value: newValue) }
@@ -120,9 +125,13 @@ extension CGEvent {
         set { setIntegerValueField(.magnificationPhase, value: newValue.rawValue) }
     }
     
-    func with(flags: CGEventFlags) -> CGEvent {
+    func with(flags: CGEventFlags?) -> CGEvent {
         let result = self.copy()!
-        result.flags = flags
+        
+        if let flags {
+            result.flags = flags
+        }
+        
         return result
     }
 }

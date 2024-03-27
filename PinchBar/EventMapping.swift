@@ -138,13 +138,9 @@ class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
             }
             
             if isOneAndAHalfTap {
-                return [CGEvent(flagsChangedEventSource: nil, flags: settings.oneAndAHalfTapFlags)!,
-                        event.with(flags: settings.oneAndAHalfTapFlags),
-                        CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
+                return [event.with(flags: settings.oneAndAHalfTapFlags)]
             } else if isDoubleTap {
-                return [CGEvent(flagsChangedEventSource: nil, flags: settings.doubleTapFlags)!,
-                        event.with(flags: settings.doubleTapFlags),
-                        CGEvent(flagsChangedEventSource: nil, flags: event.flags)!]
+                return [event.with(flags: settings.doubleTapFlags)]
             }
         }
         
@@ -158,15 +154,19 @@ class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, Eve
         var noClicks: Bool
         var sensivity: Double
         var minimalDrag: Int
+        var doubleClickFlags: CGEventFlags
+        var tripleClickFlags: CGEventFlags
     }
     
     private var clickLocation: CGPoint? = nil
     private var mapScrollToPinch = false
+    private var flags: CGEventFlags? = nil
     
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.type ==  .otherMouseDown, event.mouseButton == settings.button {
             clickLocation = event.location
             mapScrollToPinch = false
+            flags = [2: settings.doubleClickFlags, 3: settings.tripleClickFlags][event.mouseClickState]
             if settings.noClicks {
                 return []
             }
@@ -195,14 +195,14 @@ class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, Eve
             if !mapScrollToPinch {
                 mapScrollToPinch = true
                 if settings.noClicks {
-                    return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!]
+                    return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!.with(flags: flags)]
                 } else {
                     return [CGEvent(mouseEventSource: nil, mouseType: .otherMouseUp,
                                     mouseCursorPosition: clickLocation, mouseButton: settings.button)!,
-                            CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!]
+                            CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!.with(flags: flags)]
                 }
             } else {
-                return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .changed)!]
+                return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .changed)!.with(flags: flags)]
             }
         }
         
