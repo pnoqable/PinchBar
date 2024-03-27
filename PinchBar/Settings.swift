@@ -13,7 +13,9 @@ class Settings: WithUserDefaults {
         static let multiTap       = MultiTapMapping(      .init(oneAndAHalfTapFlags: .maskAlternate,
                                                                 doubleTapFlags:      .maskCommand))
         static let otherMouseZoom = OtherMouseZoomMapping(.init(button: .center, noClicks: false,
-                                                                sensivity: 0.003, minimalDrag: 2))
+                                                                sensivity: 0.003, minimalDrag: 2,
+                                                                doubleClickFlags: .maskAlternate,
+                                                                tripleClickFlags: .maskCommand))
         
         static let appPresets = ["Cubase": "Cubase"]
         static let presets    = ["Cubase":        Preset(.cubase),
