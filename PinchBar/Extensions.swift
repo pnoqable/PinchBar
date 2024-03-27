@@ -99,6 +99,11 @@ extension CGEvent {
         set { setIntegerValueField(.mouseEventButtonNumber, value: Int64(newValue.rawValue)) }
     }
     
+    var mouseClickState: Int64 {
+        get { getIntegerValueField(.mouseEventClickState) }
+        set { setIntegerValueField(.mouseEventClickState, value: newValue) }
+    }
+    
     var mouseDeltaX: Int64 {
         get { getIntegerValueField(.mouseEventDeltaX) }
         set { setIntegerValueField(.mouseEventDeltaX, value: newValue) }
