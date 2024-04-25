@@ -10,10 +10,6 @@ func <-<A, B, C>(abc: @escaping (A) -> (B) -> C, b: B) -> (A) -> C {
     { a in abc(a)(b) }
 }
 
-func <-<A, B, C>(abc: @escaping (A) -> ((B?) -> C)?, b: B?) -> (A) -> C? {
-    { a in abc(a)?(b) }
-}
-
 func <-<A, C>(abc: @escaping (A) -> () -> C, b: Void) -> (A) -> C {
     { a in abc(a)() }
 }
@@ -227,7 +223,7 @@ extension NSMenuItem {
         set { objc_setAssociatedObject(self, Self.assotiationKey.bytes, newValue, .OBJC_ASSOCIATION_RETAIN) }
     }
     
-    convenience init(title: String, isChecked: Bool = false, _ callback: @escaping Callback) {
+    convenience init(title: String, isChecked: Bool = false, _ callback: Callback? = nil) {
         self.init(title: title, action: #selector(callback(sender:)), keyEquivalent: "")
         self.callback = callback
         self.target = self
