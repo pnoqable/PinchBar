@@ -59,16 +59,9 @@ class StatusMenu {
         
         let globalSubmenu = NSMenu()
         
-        for mapping in Settings.Defaults.globalMappings {
-            let isChecked = mapping ∈ settings.globalMappings
-            globalSubmenu.addItem(NSMenuItem(title: mapping.rawValue, isChecked: isChecked) {
-                [weak settings] in guard let settings else { return }
-                if isChecked {
-                    settings.globalMappings.removeAll { $0 == mapping }
-                } else {
-                    let unsorted = settings.globalMappings + mapping
-                    settings.globalMappings = Settings.Defaults.globalMappings.filter { $0 ∈ unsorted }
-                }
+        settings.preMappingNames.forEach { pm in
+            globalSubmenu.addItem(NSMenuItem(title: pm, isChecked: pm ∉ settings.disabledPMs) {
+                [weak settings] in settings?.disabledPMs.formSymmetricDifference([pm])
             })
         }
         
@@ -78,7 +71,7 @@ class StatusMenu {
         
         let activePreset = settings.appPresets[activeApp]
         
-        for preset in settings.presetNames {
+        settings.presetNames.forEach { preset in
             presetSubmenu.addItem(NSMenuItem(title: preset, isChecked: activePreset == preset) {
                 [weak settings] in settings?.appPresets[activeApp] = preset
             })

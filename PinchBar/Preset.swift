@@ -33,3 +33,13 @@ extension Preset.Settings {
     
     static let fontSizeCmd = Self([.maskCommand: .pinchToKeys(codeA:44, codeB: 30, flags: .maskCommand)])
 }
+
+extension Preset: Codable {
+    init(from decoder: Decoder) throws {
+        self = try Self(.init(from: decoder))
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        try settings.encode(to: encoder)
+    }
+}
