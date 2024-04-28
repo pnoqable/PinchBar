@@ -1,72 +1,52 @@
 import Cocoa
 
 class Settings: WithUserDefaults {
-    enum MappingType: String, Codable, CaseIterable {
-        case magicMouseZoom, middleClick, multiTap, otherMouseScroll, otherMouseZoom
-    }
-    
     struct Defaults {
-        static let globalMappings   = MappingType.allCases
+        static let preMappings = ["Magic Mouse Zoom":   PreMapping.magicMouseZoom,
+                                  "Middle Click":       PreMapping.middleClick,
+                                  "Multi Tap":          PreMapping.multiTap,
+                                  "Other Mouse Scroll": PreMapping.otherMouseScroll,
+                                  "Other Mouse Zoom":   PreMapping.otherMouseZoom]
         
-        static let magicMouseZoom   = MagicMouseZoomMapping(   .init(sensivity: 0.005))
-        static let middleClick      = MiddleClickMapping(      .init(onMousepad: 2, onTrackpad: 3))
-        static let multiTap         = MultiTapMapping(         .init(oneAndAHalfTapFlags: .maskAlternate,
-                                                                     doubleTapFlags:      .maskCommand))
-        static let otherMouseScroll = OtherMouseScrollMapping( .init(button: .fourth, noClicks: true))
-        static let otherMouseZoom   = OtherMouseZoomMapping(   .init(button: .center, noClicks: false,
-                                                                     sensivity: 0.003, minimalDrag: 2,
-                                                                     doubleClickFlags: .maskAlternate,
-                                                                     tripleClickFlags: .maskCommand))
-        
-        static let appPresets = ["Cubase": "Cubase"]
         static let presets    = ["Cubase":        Preset(.cubase),
                                  "Cubase 13":     Preset(.cubase13),
                                  "Font Size":     Preset(.fontSize),
                                  "Font Size/cmd": Preset(.fontSizeCmd)]
+        
+        static let appPresets = ["Cubase": "Cubase"]
     }
     
-    @UserDefault("globalMappings")   var globalMappings   = Defaults.globalMappings
-    @UserDefault("magicMouseZoom")   var magicMouseZoom   = Defaults.magicMouseZoom
-    @UserDefault("middleClick")      var middleClick      = Defaults.middleClick
-    @UserDefault("multiTap")         var multiTap         = Defaults.multiTap
-    @UserDefault("otherMouseScroll") var otherMouseScroll = Defaults.otherMouseScroll
-    @UserDefault("otherMouseZoom")   var otherMouseZoom   = Defaults.otherMouseZoom
-    @UserDefault("appPresets")       var appPresets       = Defaults.appPresets
-    @UserDefault("presets")          var presets          = Defaults.presets
+    @UserDefault("preMappings") var preMappings = Defaults.preMappings
+    @UserDefault("disabledPMs") var disabledPMs = Set<String>()
+    @UserDefault("presets")     var presets     = Defaults.presets
+    @UserDefault("appPresets")  var appPresets  = Defaults.appPresets
     
-    var globalMappingNames: [String] { globalMappings.map(\.rawValue) }
-    var appNames: [String] { appPresets.keys.sorted() }
+    var preMappingsSorted: [(key: String, value: PreMapping)] { preMappings.sortedByValueAndKey() }
+    var preMappingNames: [String] { preMappingsSorted.map(\.key) }
     var presetNames: [String] { presets.keys.sorted() }
+    var appNames: [String] { appPresets.keys.sorted() }
     
     var callWhenMappingsChanged: Callback?
     
     init() {
-        // write global mappings to user defaults:
-        self.globalMappings   = globalMappings
-        self.magicMouseZoom   = magicMouseZoom
-        self.middleClick      = middleClick
-        self.multiTap         = multiTap
-        self.otherMouseScroll = otherMouseScroll
-        self.otherMouseZoom   = otherMouseZoom
-        
         // upgrade path: merge customized/user presets with newly added default presets
-        appPresets.merge(Defaults.appPresets, uniquingKeysWith: { userPreset, _ in userPreset })
+        preMappings.merge(Defaults.preMappings, uniquingKeysWith: { userPreMap, _ in userPreMap })
         presets.merge(Defaults.presets, uniquingKeysWith: { userPreset, _ in userPreset })
+        appPresets.merge(Defaults.appPresets, uniquingKeysWith: { userPreset, _ in userPreset })
         
-        NSLog("globalMappingNames: \(globalMappingNames.joined(separator: ", "))")
-        NSLog("appNames: \(appNames.joined(separator: ", "))")
+        NSLog("preMappingNames: \(preMappingNames.joined(separator: ", "))")
+        NSLog("disabledPMs: \(disabledPMs.sorted().joined(separator: ", "))")
         NSLog("presetNames: \(presetNames.joined(separator: ", "))")
+        NSLog("appNames: \(appNames.joined(separator: ", "))")
         
         setAllUserDefaultsChangedCallbacks(Weak(self, \.callWhenMappingsChanged).call)
     }
     
+    var enabledPreMappings: [any EventMapping] {
+        preMappingsSorted.filter((!) ∘ disabledPMs.contains ∘ \.key).map(\.value.mapping)
+    }
+    
     func mappings(for appName: String) -> [any EventMapping] {
-        globalMappings.map { switch $0 {
-        case .magicMouseZoom:   return magicMouseZoom
-        case .middleClick:      return middleClick
-        case .multiTap:         return multiTap
-        case .otherMouseScroll: return otherMouseScroll
-        case .otherMouseZoom:   return otherMouseZoom
-        } } + presets[appPresets[appName]]
+        enabledPreMappings + presets[appPresets[appName]]
     }
 }

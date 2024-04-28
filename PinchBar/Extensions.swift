@@ -14,7 +14,7 @@ func <-<A, C>(abc: @escaping (A) -> () -> C, b: Void) -> (A) -> C {
     { a in abc(a)() }
 }
 
-infix operator ∘ // Unicode 2218 ring operator
+infix operator ∘: MultiplicationPrecedence // Unicode 2218 ring operator
 
 func ∘<A, B, C>(bc: @escaping UnaryFunc<B, C>, ab: @escaping UnaryFunc<A, B>) -> UnaryFunc<A, C> {
     { a in bc(ab(a)) }
@@ -22,6 +22,10 @@ func ∘<A, B, C>(bc: @escaping UnaryFunc<B, C>, ab: @escaping UnaryFunc<A, B>) 
 
 func ∘<A, B, C>(bc: @escaping UnaryFunc<B, C>, ab: @escaping UnaryFunc<A, B?>) -> UnaryFunc<A, C?> {
     { a in ab(a).map(bc) }
+}
+
+func ∘<A, B, C>(bc: @escaping (B, B) -> C, ab: @escaping UnaryFunc<A, B>) -> (A, A) -> C {
+    { a1, a2 in bc(ab(a1), ab(a2)) }
 }
 
 infix operator ∈: ComparisonPrecedence // Unicode 2208 element of
@@ -32,6 +36,16 @@ func ∈<Element: Equatable>(element: Element, sequence: some Sequence<Element>)
 
 func ∈<Element>(element: Element, range: some RangeExpression<Element>) -> Bool {
     range.contains(element)
+}
+
+infix operator ∉: ComparisonPrecedence // Unicode 2209 ∉ not an element of
+
+func ∉<Element: Equatable>(element: Element, sequence: some Sequence<Element>) -> Bool {
+    !(element ∈ sequence)
+}
+
+func ∉<Element>(element: Element, range: some RangeExpression<Element>) -> Bool {
+    !(element ∈ range)
 }
 
 extension Array {
@@ -185,6 +199,11 @@ extension CGMouseButton: Codable {
     static let fifth  = Self(rawValue: 4)!
 }
 
+protocol ComparableWithoutOrder: Comparable {}
+extension ComparableWithoutOrder {
+    static func<(lhs: Self, rhs: Self) -> Bool { false }
+}
+
 extension Decodable {
     init(fromPlist obj: Any, options: JSONSerialization.WritingOptions = .fragmentsAllowed) throws {
         let data = try JSONSerialization.data(withJSONObject: obj, options: options)
@@ -199,6 +218,10 @@ extension Dictionary {
     
     func compactMapKeys<T>(_ transform: (Key) throws -> T?) rethrows -> [T: Value] {
         try .init(uniqueKeysWithValues: compactMap { (k, v) in try transform(k).map { t in (t, v) } })
+    }
+    
+    func sortedByValueAndKey() -> [(key: Key, value: Value)] where Key: Comparable, Value: Comparable {
+        sorted { (lhs, rhs) in (lhs.value, lhs.key) < (rhs.value, rhs.key) }
     }
     
     subscript(key: Key?) -> Value? {

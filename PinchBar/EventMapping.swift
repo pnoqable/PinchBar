@@ -1,22 +1,12 @@
 import Cocoa
 
-protocol EventMapping: Codable {
+protocol EventMapping {
     associatedtype Settings: Codable
     var settings: Settings { get }
     
     init(_ settings: Settings)
     
     func map(_ event: CGEvent) -> [CGEvent]
-}
-
-extension EventMapping {
-    init(from decoder: Decoder) throws {
-        try self.init(Settings(from: decoder))
-    }
-    
-    func encode(to encoder: Encoder) throws {
-        try settings.encode(to: encoder)
-    }
 }
 
 class SettingsHolder<Settings> {
@@ -28,7 +18,7 @@ class SettingsHolder<Settings> {
 }
 
 class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, EventMapping {
-    struct Settings: Codable {
+    struct Settings: Codable, ComparableWithoutOrder {
         var sensivity: Double
     }
     
@@ -53,7 +43,7 @@ class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, Eve
 }
 
 class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapping {
-    struct Settings: Codable {
+    struct Settings: Codable, ComparableWithoutOrder {
         var onMousepad: Int
         var onTrackpad: Int
     }
@@ -107,7 +97,7 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
 }
 
 class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
-    struct Settings: Codable {
+    struct Settings: Codable, ComparableWithoutOrder {
         var oneAndAHalfTapFlags: CGEventFlags
         var doubleTapFlags: CGEventFlags
     }
@@ -137,7 +127,7 @@ class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
 }
 
 class OtherMouseScrollMapping: SettingsHolder<(OtherMouseScrollMapping.Settings)>, EventMapping {
-    struct Settings: Codable {
+    struct Settings: Codable, ComparableWithoutOrder {
         var button: CGMouseButton
         var noClicks: Bool
     }
@@ -168,7 +158,7 @@ class OtherMouseScrollMapping: SettingsHolder<(OtherMouseScrollMapping.Settings)
 }
 
 class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, EventMapping {
-    struct Settings: Codable {
+    struct Settings: Codable, ComparableWithoutOrder {
         var button: CGMouseButton
         var noClicks: Bool
         var sensivity: Double
@@ -233,8 +223,8 @@ class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, Eve
 }
 
 class PinchMapping: SettingsHolder<PinchMapping.Settings>, EventMapping {
-    struct Settings: Codable {
-        enum Replacement: Codable {
+    struct Settings: Codable, ComparableWithoutOrder {
+        enum Replacement: Codable, Comparable {
             case wheel
             case keys(codeA: CGKeyCode, codeB: CGKeyCode)
         }
