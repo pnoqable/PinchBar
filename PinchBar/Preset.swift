@@ -11,7 +11,7 @@ struct Preset: EventMapping {
     }
     
     func map(_ event: CGEvent) -> [CGEvent] {
-        mappings[event.flags.purified]?.map(event) ?? [event]
+        mappings[event.flags.justModifiers]?.map(event) ?? [event]
     }
 }
 
