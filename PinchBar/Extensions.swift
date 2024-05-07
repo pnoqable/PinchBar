@@ -78,11 +78,8 @@ extension CGEventField: Codable {
 
 extension CGEventFlags: Codable, Hashable {
     static let maskNoFlags = Self([])
-    
-    // key without left/right info
-    static let pureKeyMask = UInt64.max << 8
-    
-    var purified: Self { Self(rawValue: rawValue & Self.pureKeyMask) }
+    static let maskModifierKeys = Self([.maskShift, .maskControl, .maskAlternate, .maskCommand])
+    var justModifiers: Self { intersection(.maskModifierKeys) }
 }
 
 extension CGEventType: Comparable {
