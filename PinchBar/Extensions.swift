@@ -60,18 +60,6 @@ extension Array {
     static func +(optional: Element?, array: Self) -> Self {
         optional.map { [$0] + array } ?? array
     }
-    
-    func filter<T>(_ type: T.Type) -> [T] {
-        filter { $0 is T } as! [T]
-    }
-    
-    func filterForEach<T>(_ body: (T) -> ()) {
-        filter(T.self).forEach(body)
-    }
-    
-    func filterMap<A, B>(_ transform: UnaryFunc<A, B>) -> [B] {
-        filter(A.self).map(transform)
-    }
 }
 
 extension CGEventField: Codable {
@@ -198,6 +186,20 @@ func CGEvent(magnifyEventSource source: CGEventSource?, magnification: Double, p
 extension CGMouseButton: Codable {
     static let fourth = Self(rawValue: 3)!
     static let fifth  = Self(rawValue: 4)!
+}
+
+extension Collection {
+    func filter<T>(_ type: T.Type) -> [T] {
+        compactMap { $0 as? T }
+    }
+    
+    func filterForEach<T>(_ body: (T) -> ()) {
+        filter(T.self).forEach(body)
+    }
+    
+    func filterMap<A, B>(_ transform: UnaryFunc<A, B>) -> [B] {
+        filter(A.self).map(transform)
+    }
 }
 
 protocol ComparableWithoutOrder: Comparable {}
