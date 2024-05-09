@@ -49,4 +49,27 @@ class Settings: WithUserDefaults {
     func mappings(for appName: String) -> [any EventMapping] {
         enabledPreMappings + presets[appPresets[appName]]
     }
+    
+    func interactiveExport() {
+        let panel = NSSavePanel()
+        panel.title = "Export Settings"
+        panel.nameFieldStringValue = "PinchBar Settings.json"
+        panel.allowedFileTypes = ["json"]
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            do { try self.encodeAllUserDefaultsAsJSON().write(to: url) }
+            catch { NSApplication.shared.presentError(error) }
+        }
+    }
+    
+    func interactiveImport() {
+        let panel = NSOpenPanel()
+        panel.title = "Import Settings"
+        panel.allowedFileTypes = ["json"]
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            do { try self.decodeAllUserDefaults(fromJSON: Data(contentsOf: url)) }
+            catch { NSApplication.shared.presentError(error) }
+        }
+    }
 }

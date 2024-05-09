@@ -40,6 +40,14 @@ class StatusMenu {
         
         statusItem.menu?.addItem(.separator())
         
+        statusItem.menu?.addItem(NSMenuItem(title: "Export Settings...",
+                                            Weak(settings, Settings.interactiveExport).call))
+        
+        statusItem.menu?.addItem(NSMenuItem(title: "Import Settings...",
+                                            Weak(settings, Settings.interactiveImport).call))
+        
+        statusItem.menu?.addItem(.separator())
+        
         statusItem.menu?.addItem(NSMenuItem(title: "Quit") {
             NSApplication.shared.stop(self)
         })

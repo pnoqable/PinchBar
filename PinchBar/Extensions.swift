@@ -10,8 +10,16 @@ func <-<A, B, C>(abc: @escaping (A) -> (B) -> C, b: B) -> (A) -> C {
     { a in abc(a)(b) }
 }
 
+func <-<A, B, C>(abc: @escaping (A) -> (B) throws -> C, b: B) -> (A) throws -> C {
+    { a in try abc(a)(b) }
+}
+
 func <-<A, C>(abc: @escaping (A) -> () -> C, b: Void) -> (A) -> C {
     { a in abc(a)() }
+}
+
+func <-<A, C>(abc: @escaping (A) -> () throws -> C, b: Void) -> (A) throws -> C {
+    { a in try abc(a)() }
 }
 
 infix operator ∘: MultiplicationPrecedence // Unicode 2218 ring operator
@@ -46,6 +54,17 @@ func ∉<Element: Equatable>(element: Element, sequence: some Sequence<Element>)
 
 func ∉<Element>(element: Element, range: some RangeExpression<Element>) -> Bool {
     !(element ∈ range)
+}
+
+struct ArbitraryCodingKey: CodingKey {
+    let stringValue: String
+    
+    init(stringValue: String) {
+        self.stringValue = stringValue
+    }
+    
+    init?(intValue: Int) { nil }
+    var intValue: Int? { nil }
 }
 
 extension Array {
@@ -257,25 +276,15 @@ extension NSMenuItem {
     }
 }
 
-protocol ObservableUserDefault {
+protocol UserDefaultProtocol {
+    var key: String { get }
     func setChangedCallback(_ callback: Callback?)
-}
-
-protocol WithUserDefaults {
-}
-
-extension WithUserDefaults {
-    var allUserDefaults: [ObservableUserDefault] {
-        Mirror(reflecting: self).children.map(\.value).filter(ObservableUserDefault.self)
-    }
-    
-    func setAllUserDefaultsChangedCallbacks(_ callback: Callback?) {
-        allUserDefaults.forEach(ObservableUserDefault.setChangedCallback <- callback)
-    }
+    func decode(_ plist: Any) throws
+    func plist() throws -> Any?
 }
 
 @propertyWrapper
-class UserDefault<T: Codable>: NSObject, ObservableUserDefault {
+class UserDefault<T: Codable>: NSObject, UserDefaultProtocol {
     let userDefaults: UserDefaults
     let key: String
     var cachedValue: T
@@ -283,6 +292,7 @@ class UserDefault<T: Codable>: NSObject, ObservableUserDefault {
     var callWhenChanged: Callback?
     
     init(wrappedValue: T, _ key: String, _ userDefaults: String? = nil) {
+        assert(userDefaults == nil || UserDefaults(suiteName: userDefaults!) != nil)
         self.userDefaults = userDefaults.map(\.unsafelyUnwrapped ∘ UserDefaults.init) ?? .standard
         self.cachedValue  = wrappedValue
         self.key          = key
@@ -322,6 +332,14 @@ class UserDefault<T: Codable>: NSObject, ObservableUserDefault {
         cacheInvalid = true
         callWhenChanged?()
     }
+    
+    func decode(_ plist: Any) throws {
+        wrappedValue = try T(fromPlist: plist)
+    }
+    
+    func plist() throws -> Any? {
+        try wrappedValue.plist()
+    }
 }
 
 class Weak<T: AnyObject, R> {
@@ -339,4 +357,41 @@ class Weak<T: AnyObject, R> {
     func call   ()       where R == ()        { execute() }
     func call   ()       where R == Callback  { execute()?() }
     func call<P>(_ p: P) where R == Setter<P> { execute()?(p) }
+}
+
+protocol WithUserDefaults {
+}
+
+extension WithUserDefaults {
+    var allUserDefaults: [String: UserDefaultProtocol] {
+        Dictionary(grouping: Mirror(reflecting: self).children.map(\.value)
+            .filter(UserDefaultProtocol.self), by: \.key).mapValues(\.first.unsafelyUnwrapped)
+    }
+    
+    func setAllUserDefaultsChangedCallbacks(_ callback: Callback?) {
+        allUserDefaults.values.forEach(UserDefaultProtocol.setChangedCallback <- callback)
+    }
+    
+    func decodeAllUserDefaults(fromJSON data: Data) throws {
+        guard let dict = try JSONSerialization.jsonObject(with: data) as? [String: Any] else {
+            throw DecodingError.typeMismatch(Self.self, DecodingError.Context(
+                codingPath: [], debugDescription: "Wrong type, expected Dictionary."))
+        }
+        
+        let userDefaults = allUserDefaults
+        for (key, plist) in dict {
+            guard let userDefault = userDefaults[key] else {
+                let codingKey = ArbitraryCodingKey(stringValue: key)
+                throw DecodingError.keyNotFound(codingKey, DecodingError.Context(
+                    codingPath: [codingKey], debugDescription: "Key not found: \(key)"))
+            }
+            
+            try userDefault.decode(plist)
+        }
+    }
+    
+    func encodeAllUserDefaultsAsJSON() throws -> Data {
+        try JSONSerialization.data(withJSONObject: allUserDefaults
+            .mapValues(UserDefaultProtocol.plist <- ()), options: [.prettyPrinted, .sortedKeys])
+    }
 }

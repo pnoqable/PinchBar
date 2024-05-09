@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8403F28B27FF191600CAAC3C /* EventTap.swift */; };
+		844056332BF69D7600041177 /* Extensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 844056322BF69D7600041177 /* Extensions.mm */; };
 		844469DC29993ADB00D3D424 /* MultitouchSupport.h in Sources */ = {isa = PBXBuildFile; fileRef = 844469DB29993ADB00D3D424 /* MultitouchSupport.h */; };
 		844F3B2B299A4E3A00C7953E /* MultitouchSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 844F3B2A299A4E3900C7953E /* MultitouchSupport.framework */; };
 		8459492227FA287800DBB447 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8459492127FA287800DBB447 /* AppDelegate.swift */; };
@@ -26,6 +27,7 @@
 
 /* Begin PBXFileReference section */
 		8403F28B27FF191600CAAC3C /* EventTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTap.swift; sourceTree = "<group>"; };
+		844056322BF69D7600041177 /* Extensions.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Extensions.mm; sourceTree = "<group>"; };
 		844469DB29993ADB00D3D424 /* MultitouchSupport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MultitouchSupport.h; sourceTree = "<group>"; };
 		844F3B2A299A4E3900C7953E /* MultitouchSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MultitouchSupport.framework; path = ../../../../System/Library/PrivateFrameworks/MultitouchSupport.framework; sourceTree = "<group>"; };
 		8459491E27FA287800DBB447 /* PinchBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PinchBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -95,6 +97,7 @@
 				84CAEABD2929B55600407DD3 /* EventMapping.swift */,
 				84BD5CA429A2517800BE1E32 /* EventStateMachine.swift */,
 				8403F28B27FF191600CAAC3C /* EventTap.swift */,
+				844056322BF69D7600041177 /* Extensions.mm */,
 				84CAEABF292A75E000407DD3 /* Extensions.swift */,
 				8459492E27FA28A100DBB447 /* Info.plist */,
 				844469DB29993ADB00D3D424 /* MultitouchSupport.h */,
@@ -181,6 +184,7 @@
 				84C85FA82989D77C004DFE76 /* Preset.swift in Sources */,
 				846AF3CC2804F5FC00B3E06F /* Repository.swift in Sources */,
 				84B832422966CAD10083FB73 /* StatusMenu.swift in Sources */,
+				844056332BF69D7600041177 /* Extensions.mm in Sources */,
 				844469DC29993ADB00D3D424 /* MultitouchSupport.h in Sources */,
 				84BD5CA529A2517800BE1E32 /* EventStateMachine.swift in Sources */,
 				8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */,
