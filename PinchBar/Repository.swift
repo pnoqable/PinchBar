@@ -58,13 +58,10 @@ class Repository {
     private func asyncAlert(_ messageText: String, _ informativeText: String?,
                             _ addButtonsAndRun: @escaping Setter<NSAlert> = addOkAndRun) {
         DispatchQueue.main.async {
-            NSApplication.shared.activate(ignoringOtherApps: true)
-            
             let alert = NSAlert()
             alert.icon.isTemplate = true
             alert.messageText = messageText
             alert.informativeText = informativeText ?? ""
-            
             addButtonsAndRun(alert)
         }
     }
