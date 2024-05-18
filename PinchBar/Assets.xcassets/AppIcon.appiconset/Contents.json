@@ -49,11 +49,13 @@
       "size" : "256x256"
     },
     {
+        "filename" : "AppIcon512.png",
       "idiom" : "mac",
       "scale" : "1x",
       "size" : "512x512"
     },
     {
+      "filename" : "AppIcon1024.png",
       "idiom" : "mac",
       "scale" : "2x",
       "size" : "512x512"
