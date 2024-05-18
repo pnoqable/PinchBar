@@ -59,7 +59,6 @@ class Repository {
                             _ addButtonsAndRun: @escaping Setter<NSAlert> = addOkAndRun) {
         DispatchQueue.main.async {
             let alert = NSAlert()
-            alert.icon.isTemplate = true
             alert.messageText = messageText
             alert.informativeText = informativeText ?? ""
             addButtonsAndRun(alert)
