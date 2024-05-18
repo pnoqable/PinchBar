@@ -1,55 +1,64 @@
 import Cocoa
 
 class StatusMenu {
-    var statusItem: NSStatusItem
-    var menuItemPreferences: NSMenuItem
-    var menuItemGlobal: NSMenuItem
-    var menuItemConfigure: NSMenuItem
+    let statusItem: NSStatusItem
+    let menu = NSMenu()
+    let menuItemPreferences: NSMenuItem
+    let menuItemGlobal: NSMenuItem
+    let menuItemConfigure: NSMenuItem
     
     weak var settings: Settings?
     
+    var observations = [NSKeyValueObservation]()
+    
     init(repository: Repository, settings: Settings) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(named: "StatusIcon")
-        statusItem.button?.toolTip = "PinchBar"
         statusItem.behavior = .removalAllowed
-        statusItem.menu = NSMenu()
-        statusItem.menu?.autoenablesItems = false
+        statusItem.button?.image = NSImage(named: "StatusIcon")
+        statusItem.button?.callback = { NSApplication.shared.activate(ignoringOtherApps: true) }
+        statusItem.menu = menu
+        menu.autoenablesItems = false
         
-        statusItem.menu?.addItem(NSMenuItem(title: "About PinchBar " + repository.version,
-                                            Weak(repository, Repository.openGitHub).call))
+        menu.addItem(NSMenuItem(title: "About PinchBar " + repository.version,
+                                Weak(repository, Repository.openGitHub).call))
         
-        statusItem.menu?.addItem(NSMenuItem(title: "Check for Updates...",
-                                            Weak(repository, Repository.checkForUpdates <- true).call))
+        menu.addItem(NSMenuItem(title: "Check for Updates...",
+                                Weak(repository, Repository.checkForUpdates <- true).call))
         
-        statusItem.menu?.addItem(.separator())
+        menu.addItem(.separator())
         
         menuItemPreferences = NSMenuItem(title: "Enable Pinchbar in Accessibility") {
             let url = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
             NSWorkspace.shared.open(URL(string: url)!)
         }
-        statusItem.menu?.addItem(menuItemPreferences)
+        menu.addItem(menuItemPreferences)
         
         menuItemGlobal = NSMenuItem(title: "Global Mappings")
         menuItemGlobal.isEnabled = false
-        statusItem.menu?.addItem(menuItemGlobal)
+        menu.addItem(menuItemGlobal)
         
         menuItemConfigure = NSMenuItem()
         menuItemConfigure.isEnabled = false
-        statusItem.menu?.addItem(menuItemConfigure)
+        menu.addItem(menuItemConfigure)
         
-        statusItem.menu?.addItem(.separator())
+        menu.addItem(.separator())
         
-        statusItem.menu?.addItem(NSMenuItem(title: "Export Settings...",
-                                            Weak(settings, Settings.interactiveExport).call))
+        menu.addItem(NSMenuItem(title: "Export Settings...",
+                                Weak(settings, Settings.interactiveExport).call))
         
-        statusItem.menu?.addItem(NSMenuItem(title: "Import Settings...",
-                                            Weak(settings, Settings.interactiveImport).call))
+        menu.addItem(NSMenuItem(title: "Import Settings...",
+                                Weak(settings, Settings.interactiveImport).call))
         
-        statusItem.menu?.addItem(.separator())
+        menu.addItem(.separator())
         
-        statusItem.menu?.addItem(NSMenuItem(title: "Quit") {
+        menu.addItem(NSMenuItem(title: "Quit") {
             NSApplication.shared.stop(self)
+        })
+        
+        observations.append(NSApplication.shared.observe(\.modalWindow, options: .new) { [weak self] _, change in
+            if let self, let newValue = change.newValue {
+                statusItem.menu = newValue == nil ? menu : nil
+            }
         })
         
         self.settings = settings
