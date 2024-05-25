@@ -160,61 +160,57 @@ class OtherMouseScrollMapping: SettingsHolder<(OtherMouseScrollMapping.Settings)
 class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, EventMapping {
     struct Settings: Codable, ComparableWithoutOrder {
         var button: CGMouseButton
-        var noClicks: Bool
+        var deferClicks: Bool
         var sensivity: Double
-        var minimalDrag: Int
-        var doubleClickFlags: CGEventFlags
-        var tripleClickFlags: CGEventFlags
     }
     
     private var clickLocation: CGPoint? = nil
+    private var deferredClick: CGEvent? = nil
     private var mapScrollToPinch = false
-    private var flags: CGEventFlags? = nil
     
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.type ==  .otherMouseDown, event.mouseButton == settings.button {
             clickLocation = event.location
-            mapScrollToPinch = false
-            flags = [2: settings.doubleClickFlags, 3: settings.tripleClickFlags][event.mouseClickState]
-            if settings.noClicks {
+            if settings.deferClicks {
+                deferredClick = event
                 return []
-            }
-        } else if event.type == .otherMouseUp, event.mouseButton == settings.button {
-            clickLocation = nil
-            if mapScrollToPinch {
-                mapScrollToPinch = false
-                return [CGEvent(magnifyEventSource: nil, magnification: 0, phase: .ended)!.with(flags: event.flags)]
-            } else if settings.noClicks {
-                return []
-            }
-        } else if let lastLocation = clickLocation, event.type == .otherMouseDragged,
-                  event.mouseButton == settings.button {
-            clickLocation = event.location
-            if settings.noClicks {
-                return []
-            } else if mapScrollToPinch, event.mouseDeltaSumAbs >= settings.minimalDrag {
-                mapScrollToPinch = false
-                return [CGEvent(mouseEventSource: nil, mouseType: .otherMouseDown,
-                                mouseCursorPosition: lastLocation, mouseButton: settings.button)!,
-                        event]
             }
         } else if let clickLocation, event.type == .scrollWheel {
-            guard event.scrollPhase == .other else { return [] }
+            guard event.scrollPointDeltaAxis1 != 0 else { return [] }
             let zoom = settings.sensivity * Double(event.scrollPointDeltaAxis1)
             if !mapScrollToPinch {
                 mapScrollToPinch = true
-                if settings.noClicks {
-                    return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!
-                        .with(flags: flags ?? event.flags)]
+                if let _ = deferredClick {
+                    deferredClick = nil
+                    return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!.with(flags: event.flags)]
                 } else {
                     return [CGEvent(mouseEventSource: nil, mouseType: .otherMouseUp,
                                     mouseCursorPosition: clickLocation, mouseButton: settings.button)!,
-                            CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!
-                        .with(flags: flags ?? event.flags)]
+                            CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .began)!.with(flags: event.flags)]
                 }
             } else {
-                return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .changed)!
-                    .with(flags: flags ?? event.flags)]
+                return [CGEvent(magnifyEventSource: nil, magnification: zoom, phase: .changed)!.with(flags: event.flags)]
+            }
+        } else if let lastLocation = clickLocation, event.type == .otherMouseDragged {
+            clickLocation = event.location
+            if let lastEvent = deferredClick {
+                deferredClick = nil
+                return [lastEvent, event]
+            } else if mapScrollToPinch {
+                mapScrollToPinch = false
+                return [CGEvent(magnifyEventSource: nil, magnification: 0, phase: .ended)!.with(flags: event.flags),
+                        CGEvent(mouseEventSource: nil, mouseType: .otherMouseDown,
+                                mouseCursorPosition: lastLocation, mouseButton: settings.button)!,
+                        event]
+            }
+        } else if let _ = clickLocation, event.type == .otherMouseUp {
+            clickLocation = nil
+            if let lastEvent = deferredClick {
+                deferredClick = nil
+                return [lastEvent, event]
+            } else if mapScrollToPinch {
+                mapScrollToPinch = false
+                return [CGEvent(magnifyEventSource: nil, magnification: 0, phase: .ended)!.with(flags: event.flags)]
             }
         }
         
