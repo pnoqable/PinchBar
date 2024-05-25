@@ -4,6 +4,7 @@ class Settings: WithUserDefaults {
     struct Defaults {
         static let preMappings = ["Magic Mouse Zoom":   PreMapping.magicMouseZoom,
                                   "Middle Click":       PreMapping.middleClick,
+                                  "Multi Click":        PreMapping.multiClick,
                                   "Multi Tap":          PreMapping.multiTap,
                                   "Other Mouse Scroll": PreMapping.otherMouseScroll,
                                   "Other Mouse Zoom":   PreMapping.otherMouseZoom]

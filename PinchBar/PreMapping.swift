@@ -3,6 +3,7 @@ import Foundation
 enum PreMapping: Comparable {
     case magicMouseZoom  (MagicMouseZoomMapping.Settings)
     case middleClick     (MiddleClickMapping.Settings)
+    case multiClick      (MultiClickMapping.Settings)
     case multiTap        (MultiTapMapping.Settings)
     case otherMouseScroll(OtherMouseScrollMapping.Settings)
     case otherMouseZoom  (OtherMouseZoomMapping.Settings)
@@ -11,6 +12,7 @@ enum PreMapping: Comparable {
         switch self {
         case let .magicMouseZoom  (settings): return MagicMouseZoomMapping  (settings)
         case let .middleClick     (settings): return MiddleClickMapping     (settings)
+        case let .multiClick      (settings): return MultiClickMapping      (settings)
         case let .multiTap        (settings): return MultiTapMapping        (settings)
         case let .otherMouseScroll(settings): return OtherMouseScrollMapping(settings)
         case let .otherMouseZoom  (settings): return OtherMouseZoomMapping  (settings)
@@ -21,6 +23,9 @@ enum PreMapping: Comparable {
 extension PreMapping {
     static let magicMouseZoom   = Self.magicMouseZoom  (.init(sensivity: 0.005))
     static let middleClick      = Self.middleClick     (.init(onMousepad: 2, onTrackpad: 3))
+    static let multiClick       = Self.multiClick      (.init(button: .center,
+                                                              doubleClickFlags: .maskCommand,
+                                                              tripleClickFlags: .maskAlternate))
     static let multiTap         = Self.multiTap        (.init(oneAndAHalfTapFlags: .maskAlternate,
                                                               doubleTapFlags:      .maskCommand))
     static let otherMouseScroll = Self.otherMouseScroll(.init(button: .fourth, noClicks: true))
@@ -30,7 +35,7 @@ extension PreMapping {
 
 extension PreMapping: Codable {
     enum CodingKeys: CodingKey {
-        case magicMouseZoom, middleClick, multiTap, otherMouseScroll, otherMouseZoom
+        case magicMouseZoom, middleClick, multiClick, multiTap, otherMouseScroll, otherMouseZoom
     }
     
     init(from decoder: Decoder) throws {
@@ -44,6 +49,7 @@ extension PreMapping: Codable {
         switch key {
         case .magicMouseZoom:   self = .magicMouseZoom  (try c.decode(MagicMouseZoomMapping.Settings.self,   forKey: key))
         case .middleClick:      self = .middleClick     (try c.decode(MiddleClickMapping.Settings.self,      forKey: key))
+        case .multiClick:       self = .multiClick      (try c.decode(MultiClickMapping.Settings.self,       forKey: key))
         case .multiTap:         self = .multiTap        (try c.decode(MultiTapMapping.Settings.self,         forKey: key))
         case .otherMouseScroll: self = .otherMouseScroll(try c.decode(OtherMouseScrollMapping.Settings.self, forKey: key))
         case .otherMouseZoom:   self = .otherMouseZoom  (try c.decode(OtherMouseZoomMapping.Settings.self,   forKey: key))
@@ -56,6 +62,7 @@ extension PreMapping: Codable {
         switch self {
         case let .magicMouseZoom(settings):   try c.encode(settings, forKey: .magicMouseZoom)
         case let .middleClick(settings):      try c.encode(settings, forKey: .middleClick)
+        case let .multiClick(settings):       try c.encode(settings, forKey: .multiClick)
         case let .multiTap(settings):         try c.encode(settings, forKey: .multiTap)
         case let .otherMouseScroll(settings): try c.encode(settings, forKey: .otherMouseScroll)
         case let .otherMouseZoom(settings):   try c.encode(settings, forKey: .otherMouseZoom)

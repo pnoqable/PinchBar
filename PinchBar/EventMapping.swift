@@ -96,6 +96,28 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
     }
 }
 
+class MultiClickMapping: SettingsHolder<MultiClickMapping.Settings>, EventMapping {
+    struct Settings: Codable, ComparableWithoutOrder {
+        var button: CGMouseButton
+        var doubleClickFlags: CGEventFlags
+        var tripleClickFlags: CGEventFlags
+    }
+    
+    private var flags: CGEventFlags? = nil
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.type == .otherMouseDown {
+            flags = [2: settings.doubleClickFlags, 3: settings.tripleClickFlags][event.mouseClickState]
+        } else if let flags, event.type == .scrollWheel {
+            return [event.with(flags: flags)]
+        } else if event.type == .otherMouseUp {
+            flags = nil
+        }
+        
+        return [event]
+    }
+}
+
 class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
     struct Settings: Codable, ComparableWithoutOrder {
         var oneAndAHalfTapFlags: CGEventFlags
