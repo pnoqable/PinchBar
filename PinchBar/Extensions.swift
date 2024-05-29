@@ -118,6 +118,16 @@ extension CGEvent {
         set { setIntegerValueField(.mouseEventClickState, value: newValue) }
     }
     
+    var mouseDeltaX: Int64 {
+        get { getIntegerValueField(.mouseEventDeltaX) }
+        set { setIntegerValueField(.mouseEventDeltaX, value: newValue) }
+    }
+    
+    var mouseDeltaY: Int64 {
+        get { getIntegerValueField(.mouseEventDeltaY) }
+        set { setIntegerValueField(.mouseEventDeltaY, value: newValue) }
+    }
+    
     var scrollDeltaAxis1: Int64 {
         get { getIntegerValueField(.scrollWheelEventDeltaAxis1) }
         set { setIntegerValueField(.scrollWheelEventDeltaAxis1, value: newValue) }
