@@ -29,8 +29,7 @@ extension PreMapping {
     static let multiTap         = Self.multiTap        (.init(oneAndAHalfTapFlags: .maskAlternate,
                                                               doubleTapFlags:      .maskCommand))
     static let otherMouseScroll = Self.otherMouseScroll(.init(button: .fourth, noClicks: true))
-    static let otherMouseZoom   = Self.otherMouseZoom  (.init(button: .center, deferClicks: true,
-                                                              sensivity: 0.003))
+    static let otherMouseZoom   = Self.otherMouseZoom  (.init(button: .center, sensivity: 0.003))
 }
 
 extension PreMapping: Codable {
