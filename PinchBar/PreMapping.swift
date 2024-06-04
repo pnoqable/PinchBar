@@ -1,6 +1,7 @@
 import Foundation
 
 enum PreMapping: Comparable {
+    case fixLogiFlags    (FixLogiFlags.Settings)
     case magicMouseZoom  (MagicMouseZoomMapping.Settings)
     case middleClick     (MiddleClickMapping.Settings)
     case multiClick      (MultiClickMapping.Settings)
@@ -10,6 +11,7 @@ enum PreMapping: Comparable {
     
     var mapping: any EventMapping {
         switch self {
+        case let .fixLogiFlags    (settings): return FixLogiFlags           (settings)
         case let .magicMouseZoom  (settings): return MagicMouseZoomMapping  (settings)
         case let .middleClick     (settings): return MiddleClickMapping     (settings)
         case let .multiClick      (settings): return MultiClickMapping      (settings)
@@ -21,6 +23,7 @@ enum PreMapping: Comparable {
 }
 
 extension PreMapping {
+    static let fixLogiFlags     = Self.fixLogiFlags    (.init())
     static let magicMouseZoom   = Self.magicMouseZoom  (.init(sensivity: 0.005))
     static let middleClick      = Self.middleClick     (.init(onMousepad: 2, onTrackpad: 3))
     static let multiClick       = Self.multiClick      (.init(button: .center,
@@ -34,7 +37,7 @@ extension PreMapping {
 
 extension PreMapping: Codable {
     enum CodingKeys: CodingKey {
-        case magicMouseZoom, middleClick, multiClick, multiTap, otherMouseScroll, otherMouseZoom
+        case fixLogiFlags, magicMouseZoom, middleClick, multiClick, multiTap, otherMouseScroll, otherMouseZoom
     }
     
     init(from decoder: Decoder) throws {
@@ -46,6 +49,7 @@ extension PreMapping: Codable {
         }
         
         switch key {
+        case .fixLogiFlags:     self = .fixLogiFlags    (try c.decode(FixLogiFlags.Settings.self,            forKey: key))
         case .magicMouseZoom:   self = .magicMouseZoom  (try c.decode(MagicMouseZoomMapping.Settings.self,   forKey: key))
         case .middleClick:      self = .middleClick     (try c.decode(MiddleClickMapping.Settings.self,      forKey: key))
         case .multiClick:       self = .multiClick      (try c.decode(MultiClickMapping.Settings.self,       forKey: key))
@@ -59,6 +63,7 @@ extension PreMapping: Codable {
         var c = encoder.container(keyedBy: CodingKeys.self)
         
         switch self {
+        case let .fixLogiFlags(settings):     try c.encode(settings, forKey: .fixLogiFlags)
         case let .magicMouseZoom(settings):   try c.encode(settings, forKey: .magicMouseZoom)
         case let .middleClick(settings):      try c.encode(settings, forKey: .middleClick)
         case let .multiClick(settings):       try c.encode(settings, forKey: .multiClick)
