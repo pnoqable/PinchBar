@@ -17,6 +17,22 @@ class SettingsHolder<Settings> {
     }
 }
 
+class FixLogiFlags: SettingsHolder<FixLogiFlags.Settings>, EventMapping {
+    struct Settings: Codable, ComparableWithoutOrder {}
+    
+    private var currentModifiers: CGEventFlags?
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.type == .flagsChanged {
+            currentModifiers = event.flags.justModifiers
+        } else if let currentModifiers, currentModifiers != event.flags.justModifiers {
+            event.flags = currentModifiers
+        }
+        
+        return [event]
+    }
+}
+
 class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, EventMapping {
     struct Settings: Codable, ComparableWithoutOrder {
         var sensivity: Double
