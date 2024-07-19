@@ -54,6 +54,11 @@ class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, Eve
             }
         }
         
+        if event.type == .mouseMoved, mapScrollToPinch.state == .mapping {
+            return [event,
+                    CGEvent(magnifyEventSource: nil, magnification: 0, phase: .changed)!.with(flags: event.flags)]
+        }
+        
         return [event]
     }
 }
