@@ -23,7 +23,7 @@ class StatusMenu {
                                 Weak(repository, Repository.openGitHub).call))
         
         menu.addItem(NSMenuItem(title: "Check for Updates...",
-                                Weak(repository, Repository.checkForUpdates <- true).call))
+                                Weak(repository, Repository.checkForUpdates).call <- true))
         
         menu.addItem(.separator())
         

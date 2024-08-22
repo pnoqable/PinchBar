@@ -32,7 +32,7 @@ class EventTap {
                                      userInfo: mySelf)
         
         guard let eventTap else {
-            let restart = Weak(self, EventTap.start <- callWhenStarted).call
+            let restart = Weak(self, EventTap.start).call <- callWhenStarted
             return DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: restart)
         }
         
@@ -41,7 +41,7 @@ class EventTap {
         callWhenStarted()
         
         Multitouch.setOnTrackpadTap {
-            [weak self] in self?.mappings.filterForEach(MiddleClickMapping.onTrackpadTap <- ())
+            [weak self] in self?.mappings.filterForEach(MiddleClickMapping.onTrackpadTap <-- ())
         }
         
         if !Multitouch.start() {
@@ -55,7 +55,7 @@ class EventTap {
         } else {
             mappings.reduce([event]) { events, mapping in
                 events.flatMap(mapping.map)
-            }.forEach(CGEvent.tapPostEvent <- proxy)
+            }.forEach(CGEvent.tapPostEvent <-- proxy)
         }
     }
 }
