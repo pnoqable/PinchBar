@@ -6,19 +6,21 @@ typealias Setter<P> = UnaryFunc<P, ()>
 
 infix operator <-
 
-func <-<A, B, C>(abc: @escaping (A) -> (B) -> C, b: B) -> (A) -> C {
+func <-<A, B>(ab: @escaping (A) -> B, a: A) -> () -> B {
+    { ab(a) }
+}
+
+infix operator <--
+
+func <--<A, B, C>(abc: @escaping (A) -> (B) -> C, b: B) -> (A) -> C {
     { a in abc(a)(b) }
 }
 
-func <-<A, B, C>(abc: @escaping (A) -> (B) throws -> C, b: B) -> (A) throws -> C {
-    { a in try abc(a)(b) }
-}
-
-func <-<A, C>(abc: @escaping (A) -> () -> C, b: Void) -> (A) -> C {
+func <--<A, C>(abc: @escaping (A) -> () -> C, b: Void) -> (A) -> C {
     { a in abc(a)() }
 }
 
-func <-<A, C>(abc: @escaping (A) -> () throws -> C, b: Void) -> (A) throws -> C {
+func <--<A, C>(abc: @escaping (A) -> () throws -> C, b: Void) -> (A) throws -> C {
     { a in try abc(a)() }
 }
 
@@ -368,21 +370,19 @@ class UserDefault<T: Codable>: NSObject, UserDefaultProtocol {
     }
 }
 
-class Weak<T: AnyObject, R> {
+class Weak<T: AnyObject, M> {
     weak var instance: T?
-    let function: UnaryFunc<T, R?>
+    let getter: UnaryFunc<T, M?>
     
-    init(_ instance: T, _ function: @escaping UnaryFunc<T, R?>) {
+    init(_ instance: T, _ getter: @escaping UnaryFunc<T, M?>) {
         self.instance = instance
-        self.function = function
+        self.getter = getter
     }
     
-    private func execute() -> R? { instance.flatMap(function) }
+    var method: M? { instance.flatMap(getter) }
     
-    func call   () -> R?                      { execute() }
-    func call   ()       where R == ()        { execute() }
-    func call   ()       where R == Callback  { execute()?() }
-    func call<P>(_ p: P) where R == Setter<P> { execute()?(p) }
+    func call   ()       where M == Callback  { method?() }
+    func call<P>(_ p: P) where M == Setter<P> { method?(p) }
 }
 
 protocol WithUserDefaults {
@@ -395,7 +395,7 @@ extension WithUserDefaults {
     }
     
     func setAllUserDefaultsChangedCallbacks(_ callback: Callback?) {
-        allUserDefaults.values.forEach(UserDefaultProtocol.setChangedCallback <- callback)
+        allUserDefaults.values.forEach(UserDefaultProtocol.setChangedCallback <-- callback)
     }
     
     func decodeAllUserDefaults(fromJSON data: Data) throws {
@@ -418,6 +418,6 @@ extension WithUserDefaults {
     
     func encodeAllUserDefaultsAsJSON() throws -> Data {
         try JSONSerialization.data(withJSONObject: allUserDefaults
-            .mapValues(UserDefaultProtocol.plist <- ()), options: [.prettyPrinted, .sortedKeys])
+            .mapValues(UserDefaultProtocol.plist <-- ()), options: [.prettyPrinted, .sortedKeys])
     }
 }
