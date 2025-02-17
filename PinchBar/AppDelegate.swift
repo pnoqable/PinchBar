@@ -1,26 +1,14 @@
 import Cocoa
 
-private let unknownApp: String = "unknown Application"
-
 @main class AppDelegate: NSObject, NSApplicationDelegate {
-    var activeApp: String = unknownApp
-    
-    let eventTap = EventTap()
     let repository = Repository()
     let settings = Settings()
     
-    let statusMenu = StatusMenu()
+    lazy var eventTap = EventTap(callWhenStarted: Weak(statusMenu, StatusMenu.enableSubmenus).call)
+    lazy var statusMenu = StatusMenu(repository: repository, settings: settings)
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        NSLog("PinchBar \(repository.version), configured for: \(settings.appNames)")
-        
-        statusMenu.callWhenPresetSelected = { [weak self] p in self?.changePreset(to: p) }
-        statusMenu.create(repository: repository, settings: settings)
-        
-        eventTap.callWhenCreated = { [weak statusMenu] in statusMenu?.enableSubmenu() }
-        eventTap.start()
-        
-        repository.checkForUpdates(verbose: false)
+        settings.callWhenMappingsChanged = Weak(self, AppDelegate.activeAppChanged).call
         
         NSWorkspace.shared.notificationCenter
             .addObserver(self, selector: #selector(activeAppChanged),
@@ -35,16 +23,10 @@ private let unknownApp: String = "unknown Application"
     }
     
     @objc func activeAppChanged() {
-        activeApp = NSWorkspace.shared.frontmostApplication?.localizedName ?? unknownApp
-        changePreset(to: settings.appPresets[activeApp])
-    }
-    
-    func changePreset(to newPreset: String?) {
-        settings.appPresets[activeApp] = newPreset
-        settings.save()
-        
-        eventTap.preset = settings.preset(named: newPreset)
-        statusMenu.updateSubmenu(activeApp: activeApp, activePreset: newPreset)
+        if let activeApp = NSWorkspace.shared.frontmostApplication?.localizedName {
+            eventTap.mappings = settings.mappings(for: activeApp)
+            statusMenu.updateSubmenus(activeApp: activeApp)
+        }
     }
     
     static func main() {

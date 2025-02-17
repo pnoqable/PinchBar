@@ -3,14 +3,23 @@ import Cocoa
 class EventTap {
     private var eventTap: CFMachPort?
     
-    var preset: Settings.Preset?
+    var mappings: [any EventMapping] = []
     
-    var callWhenCreated: Callback?
+    init(callWhenStarted: @escaping Callback) {
+        start(callWhenStarted: callWhenStarted)
+    }
     
-    func start() {
-        let adapter: CGEventTapCallBack = { proxy, type, event, userInfo in
-            let mySelf = Unmanaged<EventTap>.fromOpaque(userInfo!).takeUnretainedValue()
-            return mySelf.tap(proxy: proxy, type: type, event: event)
+    deinit {
+        // don't release members of this class, call NSApplication.shared.stop() instead.
+        fatalError("ressources leaked")
+    }
+    
+    private func start(callWhenStarted: @escaping Callback) {
+        let eventMask = CGEventMask(1<<29 | 1<<22 | 0b111<<25 | 0b1000011111110) // trackpad, scroll, click and drag events
+        
+        let adapter: CGEventTapCallBack = { proxy, _, event, userInfo in
+            Unmanaged<EventTap>.fromOpaque(userInfo!).takeUnretainedValue().tap(event, proxy)
+            return nil
         }
         
         let mySelf = Unmanaged.passUnretained(self).toOpaque()
@@ -18,26 +27,35 @@ class EventTap {
         eventTap = CGEvent.tapCreate(tap: .cghidEventTap,
                                      place: .headInsertEventTap,
                                      options: .defaultTap,
-                                     eventsOfInterest:  1<<29, // trackpad events only
+                                     eventsOfInterest: eventMask,
                                      callback: adapter,
                                      userInfo: mySelf)
         
         guard let eventTap else {
-            return DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: start)
+            let restart = Weak(self, EventTap.start).call <- callWhenStarted
+            return DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: restart)
         }
         
         let runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, eventTap, 0)
-        CFRunLoopAddSource(CFRunLoopGetCurrent(), runLoopSource, .commonModes)
-        callWhenCreated?()
-    }
-    
-    private func tap(proxy: CGEventTapProxy, type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
-        if type == .tapDisabledByTimeout {
-            CGEvent.tapEnable(tap: eventTap!, enable: true)
-        } else if let mapping = preset?[event.flags.purified], mapping.canTap(event) {
-            return mapping.tap(event, proxy: proxy)
+        CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
+        callWhenStarted()
+        
+        Multitouch.setOnTrackpadTap {
+            [weak self] in self?.mappings.filterForEach(MiddleClickMapping.onTrackpadTap <-- ())
         }
         
-        return .passUnretained(event)
+        if !Multitouch.start() {
+            NSLog("Cannot start Multitouch Support")
+        }
+    }
+    
+    private func tap(_ event: CGEvent, _ proxy: CGEventTapProxy) {
+        if event.type == .tapDisabledByTimeout {
+            CGEvent.tapEnable(tap: eventTap!, enable: true)
+        } else {
+            mappings.reduce([event]) { events, mapping in
+                events.flatMap(mapping.map)
+            }.forEach(CGEvent.tapPostEvent <-- proxy)
+        }
     }
 }

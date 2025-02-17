@@ -1,76 +1,106 @@
 import Cocoa
 
 class StatusMenu {
-    var statusItem: NSStatusItem!
-    var menuItemPreferences: NSMenuItem!
-    var menuItemConfigure: NSMenuItem!
+    let statusItem: NSStatusItem
+    let menu = NSMenu()
+    let menuItemPreferences: NSMenuItem
+    let menuItemGlobal: NSMenuItem
+    let menuItemConfigure: NSMenuItem
     
     weak var settings: Settings?
     
-    var callWhenPresetSelected: ((String?) -> ())?
+    var observations = [NSKeyValueObservation]()
     
-    func create(repository: Repository, settings: Settings) {
+    init(repository: Repository, settings: Settings) {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        statusItem.button?.image = NSImage(named: "StatusIcon")
-        statusItem.button?.toolTip = "PinchBar"
         statusItem.behavior = .removalAllowed
-        statusItem.menu = NSMenu()
-        statusItem.menu?.autoenablesItems = false
+        statusItem.button?.image = NSImage(named: "StatusIcon")
+        statusItem.button?.callback = { NSApplication.shared.activate(ignoringOtherApps: true) }
+        statusItem.menu = menu
+        menu.autoenablesItems = false
         
-        statusItem.menu?.addItem(NSMenuItem(title: "About PinchBar " + repository.version) {
-            [weak repository] in repository?.openGitHub()
-        })
+        menu.addItem(NSMenuItem(title: "About PinchBar " + repository.version,
+                                Weak(repository, Repository.openGitHub).call))
         
-        statusItem.menu?.addItem(NSMenuItem(title: "Check for Updates...") {
-            [weak repository] in repository?.checkForUpdates(verbose: true)
-        })
+        menu.addItem(NSMenuItem(title: "Check for Updates...",
+                                Weak(repository, Repository.checkForUpdates).call <- true))
         
-        statusItem.menu?.addItem(.separator())
+        menu.addItem(.separator())
         
         menuItemPreferences = NSMenuItem(title: "Enable Pinchbar in Accessibility") {
             let url = "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
             NSWorkspace.shared.open(URL(string: url)!)
         }
-        statusItem.menu?.addItem(menuItemPreferences)
+        menu.addItem(menuItemPreferences)
+        
+        menuItemGlobal = NSMenuItem(title: "Global Mappings")
+        menuItemGlobal.isEnabled = false
+        menu.addItem(menuItemGlobal)
         
         menuItemConfigure = NSMenuItem()
         menuItemConfigure.isEnabled = false
-        statusItem.menu?.addItem(menuItemConfigure)
+        menu.addItem(menuItemConfigure)
         
-        statusItem.menu?.addItem(.separator())
+        menu.addItem(.separator())
         
-        statusItem.menu?.addItem(NSMenuItem(title: "Quit") {
+        menu.addItem(NSMenuItem(title: "Export Settings...",
+                                Weak(settings, Settings.interactiveExport).call))
+        
+        menu.addItem(NSMenuItem(title: "Import Settings...",
+                                Weak(settings, Settings.interactiveImport).call))
+        
+        menu.addItem(.separator())
+        
+        menu.addItem(NSMenuItem(title: "Quit") {
             NSApplication.shared.stop(self)
+        })
+        
+        observations.append(NSApplication.shared.observe(\.modalWindow, options: .new) { [weak self] _, change in
+            if let self, let newValue = change.newValue {
+                statusItem.menu = newValue == nil ? menu : nil
+            }
         })
         
         self.settings = settings
     }
     
-    func enableSubmenu() {
+    func enableSubmenus() {
         menuItemPreferences.state = .on
         menuItemPreferences.isEnabled = false
+        menuItemGlobal.isEnabled = true
         menuItemConfigure.isEnabled = true
     }
     
-    func updateSubmenu(activeApp: String, activePreset: String?) {
-        guard let settings else { fatalError("called before create") }
+    func updateSubmenus(activeApp: String) {
+        guard let settings else { return }
         
-        let submenu = NSMenu()
+        let globalSubmenu = NSMenu()
         
-        for preset in settings.presetNames {
-            submenu.addItem(NSMenuItem(title: preset, isChecked: activePreset == preset) {
-                [weak self] in self?.callWhenPresetSelected?(preset)
+        settings.preMappingNames.forEach { pm in
+            globalSubmenu.addItem(NSMenuItem(title: pm, isChecked: pm ∉ settings.disabledPMs) {
+                [weak settings] in settings?.disabledPMs.formSymmetricDifference([pm])
             })
         }
         
-        submenu.addItem(.separator())
+        menuItemGlobal.submenu = globalSubmenu
         
-        submenu.addItem(NSMenuItem(title: "None", isChecked: activePreset == nil) {
-            [weak self] in self?.callWhenPresetSelected?(nil)
+        let presetSubmenu = NSMenu()
+        
+        let activePreset = settings.appPresets[activeApp]
+        
+        settings.presetNames.forEach { preset in
+            presetSubmenu.addItem(NSMenuItem(title: preset, isChecked: activePreset == preset) {
+                [weak settings] in settings?.appPresets[activeApp] = preset
+            })
+        }
+        
+        presetSubmenu.addItem(.separator())
+        presetSubmenu.addItem(NSMenuItem(title: "None", isChecked: activePreset == nil) {
+            [weak settings] in settings?.appPresets[activeApp] = nil
         })
         
-        statusItem.button?.appearsDisabled = activePreset == nil
+        statusItem.button?.appearsDisabled = activePreset == nil || menuItemPreferences.isEnabled
         menuItemConfigure.title = "Change Preset for " + activeApp
-        menuItemConfigure.submenu = submenu
+        menuItemConfigure.submenu = presetSubmenu
     }
 }

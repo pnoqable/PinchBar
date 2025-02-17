@@ -1,53 +1,77 @@
 import Cocoa
 
-class Settings {
-    typealias Preset = [CGEventFlags: EventMapping]
-    typealias PList = [String: EventMapping]
-    
-    var appPresets: [String: String] = ["Cubase": "Cubase"]
-    var presets: [String: Preset] = ["Cubase": .cubase, "Cubase 13": .cubase13,
-                                     "Font Size": .fontSize, "Font Size/cmd": .fontSizeCmd]
-    
-    var appNames: [String] { appPresets.keys.sorted() }
-    var presetNames: [String] { presets.keys.sorted() }
-    
-    func preset(named name: String?) -> Preset? { name.flatMap{ name in presets[name] } }
-    
-    private var plists: [String: PList] {
-        get { presets.mapValues{ preset in preset.mapKeys{ flags in "\(flags.rawValue)" } } }
-        set { presets = newValue.mapValues{ plist in plist.compactMapKeys(CGEventFlags.init) } }
+class Settings: WithUserDefaults {
+    struct Defaults {
+        static let preMappings = ["Fix Logi Flags":     PreMapping.fixLogiFlags,
+                                  "Magic Mouse Zoom":   PreMapping.magicMouseZoom,
+                                  "Middle Click":       PreMapping.middleClick,
+                                  "Multi Click":        PreMapping.multiClick,
+                                  "Multi Tap":          PreMapping.multiTap,
+                                  "Other Mouse Scroll": PreMapping.otherMouseScroll,
+                                  "Other Mouse Zoom":   PreMapping.otherMouseZoom]
+        
+        static let presets    = ["Cubase":        Preset(.cubase),
+                                 "Cubase 13":     Preset(.cubase13),
+                                 "Font Size":     Preset(.fontSize),
+                                 "Font Size/cmd": Preset(.fontSizeCmd)]
+        
+        static let appPresets = ["Cubase": "Cubase"]
     }
+    
+    @UserDefault("preMappings") var preMappings = Defaults.preMappings
+    @UserDefault("disabledPMs") var disabledPMs = Set<String>()
+    @UserDefault("presets")     var presets     = Defaults.presets
+    @UserDefault("appPresets")  var appPresets  = Defaults.appPresets
+    
+    var preMappingsSorted: [(key: String, value: PreMapping)] { preMappings.sortedByValueAndKey() }
+    var preMappingNames: [String] { preMappingsSorted.map(\.key) }
+    var presetNames: [String] { presets.keys.sorted() }
+    var appNames: [String] { appPresets.keys.sorted() }
+    
+    var callWhenMappingsChanged: Callback?
     
     init() {
-        if let dict = UserDefaults.standard.dictionary(forKey: "presets"),
-           let json = try? JSONSerialization.data(withJSONObject: dict),
-           let plists = try? JSONDecoder().decode(type(of:plists), from: json),
-           let appPresets = UserDefaults.standard.dictionary(forKey: "appPresets") as? [String:String] {
-            self.plists = plists
-            self.appPresets = appPresets
+        // upgrade path: merge customized/user presets with newly added default presets
+        preMappings.merge(Defaults.preMappings, uniquingKeysWith: { userPreMap, _ in userPreMap })
+        presets.merge(Defaults.presets, uniquingKeysWith: { userPreset, _ in userPreset })
+        appPresets.merge(Defaults.appPresets, uniquingKeysWith: { userPreset, _ in userPreset })
+        
+        NSLog("preMappingNames: \(preMappingNames.joined(separator: ", "))")
+        NSLog("disabledPMs: \(disabledPMs.sorted().joined(separator: ", "))")
+        NSLog("presetNames: \(presetNames.joined(separator: ", "))")
+        NSLog("appNames: \(appNames.joined(separator: ", "))")
+        
+        setAllUserDefaultsChangedCallbacks(Weak(self, \.callWhenMappingsChanged).call)
+    }
+    
+    var enabledPreMappings: [any EventMapping] {
+        preMappingsSorted.filter((!) ∘ disabledPMs.contains ∘ \.key).map(\.value.mapping)
+    }
+    
+    func mappings(for appName: String) -> [any EventMapping] {
+        enabledPreMappings + presets[appPresets[appName]]
+    }
+    
+    func interactiveExport() {
+        let panel = NSSavePanel()
+        panel.title = "Export Settings"
+        panel.nameFieldStringValue = "PinchBar Settings.json"
+        panel.allowedFileTypes = ["json"]
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            do { try self.encodeAllUserDefaultsAsJSON().write(to: url) }
+            catch { NSApplication.shared.presentError(error) }
         }
     }
     
-    func save() {
-        if let json = try? JSONEncoder().encode(plists),
-           let dict = try? JSONSerialization.jsonObject(with: json) {
-            UserDefaults.standard.set(dict, forKey: "presets")
-            UserDefaults.standard.set(appPresets, forKey: "appPresets")
+    func interactiveImport() {
+        let panel = NSOpenPanel()
+        panel.title = "Import Settings"
+        panel.allowedFileTypes = ["json"]
+        
+        if panel.runModal() == .OK, let url = panel.url {
+            do { try self.decodeAllUserDefaults(fromJSON: Data(contentsOf: url)) }
+            catch { NSApplication.shared.presentError(error) }
         }
     }
-}
-
-extension Settings.Preset {
-    static let cubase: Self = [.maskNoFlags: .pinchToWheel(),
-                               .maskAlternate: .pinchToKeys(flags: .maskAlternate, codeA: 5, codeB: 4),
-                               .maskCommand: .pinchToKeys(flags: .maskShift, codeA: 5, codeB: 4)]
-    static let cubase13: Self = [.maskNoFlags: .pinchToWheel(),
-                                 .maskAlternate: .pinchToWheel(flags: .maskCommand.union(.maskAlternate),
-                                                               sensivity: 500),
-                                 .maskCommand: .pinchToWheel(flags: .maskCommand.union(.maskShift),
-                                                             sensivity: 500)]
-    static let fontSize: Self = [.maskNoFlags: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30),
-                                 .maskCommand: .pinchToPinch()]
-    static let fontSizeCmd: Self = [.maskNoFlags: .pinchToPinch(),
-                                    .maskCommand: .pinchToKeys(flags: .maskCommand, codeA:44, codeB: 30)]
 }

@@ -3,14 +3,21 @@ import Cocoa
 class Repository {
     let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as! String
     
+    @UserDefault("knownVersion") var knownVersion: String?
+    
+    init() {
+        NSLog("PinchBar \(version)")
+        checkForUpdates(verbose: false)
+    }
+    
     func openGitHub() {
         NSWorkspace.shared.open(URL(string: "https://github.com/pnoqable/PinchBar")!)
     }
     
     func checkForUpdates(verbose: Bool) {
-        let url = "https://api.github.com/repos/pnoqable/PinchBar/releases/latest"
-        URLSession(configuration: .ephemeral).dataTask(with: URL(string: url)!) { data, _, error in
-            self.checkUpdate(data: data, error: error, verbose: verbose)
+        let url = URL(string: "https://api.github.com/repos/pnoqable/PinchBar/releases/latest")!
+        URLSession(configuration: .ephemeral).dataTask(with: url) { [weak self] data, _, error in
+            self?.checkUpdate(data: data, error: error, verbose: verbose)
         }.resume()
     }
     
@@ -25,7 +32,7 @@ class Repository {
             return verbose ? asyncAlert("PinchBar is up-to-date!", "Current Version: \(version)") : ()
         }
         
-        let updateKnown = newVersion == UserDefaults.standard.string(forKey: "knownVersion")
+        let updateKnown = newVersion == knownVersion
         
         guard verbose || !updateKnown else { return }
         
@@ -39,11 +46,7 @@ class Repository {
                 NSWorkspace.shared.open(url)
             }
             
-            if alert.suppressionButton?.state == .on {
-                UserDefaults.standard.set(newVersion, forKey: "knownVersion")
-            } else {
-                UserDefaults.standard.removeObject(forKey: "knownVersion")
-            }
+            self.knownVersion = alert.suppressionButton?.state == .on ? newVersion : nil
         }
     }
     
@@ -53,15 +56,11 @@ class Repository {
     }
     
     private func asyncAlert(_ messageText: String, _ informativeText: String?,
-                            _ addButtonsAndRun: @escaping ((NSAlert)->()) = addOkAndRun) {
+                            _ addButtonsAndRun: @escaping Setter<NSAlert> = addOkAndRun) {
         DispatchQueue.main.async {
-            NSApplication.shared.activate(ignoringOtherApps: true)
-            
             let alert = NSAlert()
-            alert.icon.isTemplate = true
             alert.messageText = messageText
             alert.informativeText = informativeText ?? ""
-            
             addButtonsAndRun(alert)
         }
     }

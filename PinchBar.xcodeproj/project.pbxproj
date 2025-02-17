@@ -8,28 +8,44 @@
 
 /* Begin PBXBuildFile section */
 		8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8403F28B27FF191600CAAC3C /* EventTap.swift */; };
+		844056332BF69D7600041177 /* Extensions.mm in Sources */ = {isa = PBXBuildFile; fileRef = 844056322BF69D7600041177 /* Extensions.mm */; };
+		844469DC29993ADB00D3D424 /* MultitouchSupport.h in Sources */ = {isa = PBXBuildFile; fileRef = 844469DB29993ADB00D3D424 /* MultitouchSupport.h */; };
+		844F3B2B299A4E3A00C7953E /* MultitouchSupport.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 844F3B2A299A4E3900C7953E /* MultitouchSupport.framework */; };
 		8459492227FA287800DBB447 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8459492127FA287800DBB447 /* AppDelegate.swift */; };
 		8459492427FA287C00DBB447 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 8459492327FA287C00DBB447 /* Assets.xcassets */; };
 		846AF3CC2804F5FC00B3E06F /* Repository.swift in Sources */ = {isa = PBXBuildFile; fileRef = 846AF3CB2804F5FC00B3E06F /* Repository.swift */; };
+		8494F8202BDD6AE20077B612 /* PreMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8494F81F2BDD6AE20077B612 /* PreMapping.swift */; };
 		84B832422966CAD10083FB73 /* StatusMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B832412966CAD10083FB73 /* StatusMenu.swift */; };
+		84BD5CA529A2517800BE1E32 /* EventStateMachine.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84BD5CA429A2517800BE1E32 /* EventStateMachine.swift */; };
 		84C256C3294228DC0087E286 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C256C2294228DC0087E286 /* Settings.swift */; };
+		84C85FA82989D77C004DFE76 /* Preset.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C85FA72989D77C004DFE76 /* Preset.swift */; };
 		84CAEABE2929B55600407DD3 /* EventMapping.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CAEABD2929B55600407DD3 /* EventMapping.swift */; };
 		84CAEAC0292A75E000407DD3 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84CAEABF292A75E000407DD3 /* Extensions.swift */; };
+		84D81C6E299A507F00EF33DB /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84D81C6D299A507E00EF33DB /* IOKit.framework */; };
+		84F43DF9299971A100B28740 /* MultitouchSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 84F43DF8299971A100B28740 /* MultitouchSupport.mm */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		8403F28B27FF191600CAAC3C /* EventTap.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventTap.swift; sourceTree = "<group>"; };
+		844056322BF69D7600041177 /* Extensions.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = Extensions.mm; sourceTree = "<group>"; };
+		844469DB29993ADB00D3D424 /* MultitouchSupport.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = MultitouchSupport.h; sourceTree = "<group>"; };
+		844F3B2A299A4E3900C7953E /* MultitouchSupport.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = MultitouchSupport.framework; path = ../../../../System/Library/PrivateFrameworks/MultitouchSupport.framework; sourceTree = "<group>"; };
 		8459491E27FA287800DBB447 /* PinchBar.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = PinchBar.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		8459492127FA287800DBB447 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		8459492327FA287C00DBB447 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8459492E27FA28A100DBB447 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		846AF3CB2804F5FC00B3E06F /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
+		8494F81F2BDD6AE20077B612 /* PreMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreMapping.swift; sourceTree = "<group>"; };
 		84A304C828C686C70087F4F6 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		84B832412966CAD10083FB73 /* StatusMenu.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusMenu.swift; sourceTree = "<group>"; };
+		84BD5CA429A2517800BE1E32 /* EventStateMachine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventStateMachine.swift; sourceTree = "<group>"; };
 		84C256C2294228DC0087E286 /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		84C85FA72989D77C004DFE76 /* Preset.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Preset.swift; sourceTree = "<group>"; };
 		84CAEABD2929B55600407DD3 /* EventMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EventMapping.swift; sourceTree = "<group>"; };
 		84CAEABF292A75E000407DD3 /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		84D7DA58290085BF0013E257 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
+		84D81C6D299A507E00EF33DB /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
+		84F43DF8299971A100B28740 /* MultitouchSupport.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MultitouchSupport.mm; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -37,19 +53,31 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				844F3B2B299A4E3A00C7953E /* MultitouchSupport.framework in Frameworks */,
+				84D81C6E299A507F00EF33DB /* IOKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		844F3B29299A4E3900C7953E /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				84D81C6D299A507E00EF33DB /* IOKit.framework */,
+				844F3B2A299A4E3900C7953E /* MultitouchSupport.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		8459491527FA287800DBB447 = {
 			isa = PBXGroup;
 			children = (
 				8459492027FA287800DBB447 /* PinchBar */,
+				844F3B29299A4E3900C7953E /* Frameworks */,
+				8459491F27FA287800DBB447 /* Products */,
 				84D7DA58290085BF0013E257 /* LICENSE.md */,
 				84A304C828C686C70087F4F6 /* README.md */,
-				8459491F27FA287800DBB447 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
@@ -67,9 +95,15 @@
 				8459492127FA287800DBB447 /* AppDelegate.swift */,
 				8459492327FA287C00DBB447 /* Assets.xcassets */,
 				84CAEABD2929B55600407DD3 /* EventMapping.swift */,
+				84BD5CA429A2517800BE1E32 /* EventStateMachine.swift */,
 				8403F28B27FF191600CAAC3C /* EventTap.swift */,
+				844056322BF69D7600041177 /* Extensions.mm */,
 				84CAEABF292A75E000407DD3 /* Extensions.swift */,
 				8459492E27FA28A100DBB447 /* Info.plist */,
+				844469DB29993ADB00D3D424 /* MultitouchSupport.h */,
+				84F43DF8299971A100B28740 /* MultitouchSupport.mm */,
+				84C85FA72989D77C004DFE76 /* Preset.swift */,
+				8494F81F2BDD6AE20077B612 /* PreMapping.swift */,
 				846AF3CB2804F5FC00B3E06F /* Repository.swift */,
 				84C256C2294228DC0087E286 /* Settings.swift */,
 				84B832412966CAD10083FB73 /* StatusMenu.swift */,
@@ -105,7 +139,7 @@
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
 				LastSwiftUpdateCheck = 1320;
-				LastUpgradeCheck = 1320;
+				LastUpgradeCheck = 1620;
 				TargetAttributes = {
 					8459491D27FA287800DBB447 = {
 						CreatedOnToolsVersion = 13.2.1;
@@ -147,11 +181,17 @@
 			files = (
 				84C256C3294228DC0087E286 /* Settings.swift in Sources */,
 				84CAEAC0292A75E000407DD3 /* Extensions.swift in Sources */,
+				84C85FA82989D77C004DFE76 /* Preset.swift in Sources */,
 				846AF3CC2804F5FC00B3E06F /* Repository.swift in Sources */,
 				84B832422966CAD10083FB73 /* StatusMenu.swift in Sources */,
+				844056332BF69D7600041177 /* Extensions.mm in Sources */,
+				844469DC29993ADB00D3D424 /* MultitouchSupport.h in Sources */,
+				84BD5CA529A2517800BE1E32 /* EventStateMachine.swift in Sources */,
 				8403F28C27FF191600CAAC3C /* EventTap.swift in Sources */,
+				84F43DF9299971A100B28740 /* MultitouchSupport.mm in Sources */,
 				8459492227FA287800DBB447 /* AppDelegate.swift in Sources */,
 				84CAEABE2929B55600407DD3 /* EventMapping.swift in Sources */,
+				8494F8202BDD6AE20077B612 /* PreMapping.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,9 +202,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -192,9 +233,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -226,9 +269,10 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++17";
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_ENABLE_MODULES = YES;
 				CLANG_ENABLE_OBJC_ARC = YES;
@@ -256,9 +300,11 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -287,7 +333,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = MW6A6MU64S;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -299,12 +346,17 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.3;
+				MARKETING_VERSION = 0.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pnoqable.PinchBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = PinchBar/MultitouchSupport.h;
 				SWIFT_VERSION = 5.0;
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
+				);
 			};
 			name = Debug;
 		};
@@ -316,7 +368,8 @@
 				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
-				CURRENT_PROJECT_VERSION = 11;
+				CURRENT_PROJECT_VERSION = 12;
+				DEAD_CODE_STRIPPING = YES;
 				DEVELOPMENT_TEAM = MW6A6MU64S;
 				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = YES;
@@ -328,12 +381,17 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 0.3;
+				MARKETING_VERSION = 0.3.1;
 				PRODUCT_BUNDLE_IDENTIFIER = com.pnoqable.PinchBar;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = PinchBar/MultitouchSupport.h;
 				SWIFT_VERSION = 5.0;
+				SYSTEM_FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(SYSTEM_LIBRARY_DIR)/PrivateFrameworks",
+				);
 			};
 			name = Release;
 		};
