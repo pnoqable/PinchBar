@@ -416,7 +416,15 @@ extension WithUserDefaults {
                     codingPath: [codingKey], debugDescription: "Key not found: \(key)"))
             }
             
-            try userDefault.decode(plist)
+            do {
+                try userDefault.decode(plist)
+            } catch DecodingError.typeMismatch(let type, let context) {
+                let codingKey = ArbitraryCodingKey(stringValue: key)
+                throw DecodingError.typeMismatch(type, DecodingError.Context(
+                    codingPath: codingKey + context.codingPath,
+                    debugDescription: context.debugDescription,
+                    underlyingError: context.underlyingError))
+            }
         }
     }
     

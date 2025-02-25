@@ -44,18 +44,23 @@ extension PreMapping: Codable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         
         guard let key = c.allKeys.first, c.allKeys.count == 1 else {
-            throw DecodingError.typeMismatch(Self.self, .init(codingPath: c.codingPath, debugDescription:
-                                                                "Invalid number of keys found, expected one."))
+            throw DecodingError.typeMismatch(Self.self,
+                .init(codingPath: c.codingPath, debugDescription: "Invalid number of keys found, expected one."))
         }
         
-        switch key {
-        case .fixLogiFlags:     self = .fixLogiFlags    (try c.decode(FixLogiFlags.Settings.self,            forKey: key))
-        case .magicMouseZoom:   self = .magicMouseZoom  (try c.decode(MagicMouseZoomMapping.Settings.self,   forKey: key))
-        case .middleClick:      self = .middleClick     (try c.decode(MiddleClickMapping.Settings.self,      forKey: key))
-        case .multiClick:       self = .multiClick      (try c.decode(MultiClickMapping.Settings.self,       forKey: key))
-        case .multiTap:         self = .multiTap        (try c.decode(MultiTapMapping.Settings.self,         forKey: key))
-        case .otherMouseScroll: self = .otherMouseScroll(try c.decode(OtherMouseScrollMapping.Settings.self, forKey: key))
-        case .otherMouseZoom:   self = .otherMouseZoom  (try c.decode(OtherMouseZoomMapping.Settings.self,   forKey: key))
+        do {
+            switch key {
+            case .fixLogiFlags:     self = .fixLogiFlags    (try c.decode(FixLogiFlags.Settings.self,            forKey: key))
+            case .magicMouseZoom:   self = .magicMouseZoom  (try c.decode(MagicMouseZoomMapping.Settings.self,   forKey: key))
+            case .middleClick:      self = .middleClick     (try c.decode(MiddleClickMapping.Settings.self,      forKey: key))
+            case .multiClick:       self = .multiClick      (try c.decode(MultiClickMapping.Settings.self,       forKey: key))
+            case .multiTap:         self = .multiTap        (try c.decode(MultiTapMapping.Settings.self,         forKey: key))
+            case .otherMouseScroll: self = .otherMouseScroll(try c.decode(OtherMouseScrollMapping.Settings.self, forKey: key))
+            case .otherMouseZoom:   self = .otherMouseZoom  (try c.decode(OtherMouseZoomMapping.Settings.self,   forKey: key))
+            }
+        } catch {
+            throw DecodingError.typeMismatch(Self.self,
+                .init(codingPath: c.codingPath, debugDescription: "Type mismatch: \(key.stringValue)", underlyingError: error))
         }
     }
     
