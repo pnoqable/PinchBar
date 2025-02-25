@@ -70,8 +70,10 @@ class Settings: WithUserDefaults {
         panel.allowedFileTypes = ["json"]
         
         if panel.runModal() == .OK, let url = panel.url {
-            do { try self.decodeAllUserDefaults(fromJSON: Data(contentsOf: url)) }
-            catch { NSApplication.shared.presentError(error) }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+                do { try self.decodeAllUserDefaults(fromJSON: Data(contentsOf: url)) }
+                catch { NSApplication.shared.presentError(error) }
+            }
         }
     }
 }

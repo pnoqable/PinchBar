@@ -203,6 +203,10 @@ extension CGMouseButton: Codable {
     static let fifth  = Self(rawValue: 4)!
 }
 
+extension CodingKey {
+//    var description: String { stringValue }
+}
+
 extension Collection {
     func filter<T>(_ type: T.Type) -> [T] {
         filter { $0 is T } as! [T]
@@ -412,7 +416,15 @@ extension WithUserDefaults {
                     codingPath: [codingKey], debugDescription: "Key not found: \(key)"))
             }
             
-            try userDefault.decode(plist)
+            do {
+                try userDefault.decode(plist)
+            } catch DecodingError.typeMismatch(let type, let context) {
+                let codingKey = ArbitraryCodingKey(stringValue: key)
+                throw DecodingError.typeMismatch(type, DecodingError.Context(
+                    codingPath: codingKey + context.codingPath,
+                    debugDescription: context.debugDescription,
+                    underlyingError: context.underlyingError))
+            }
         }
     }
     
