@@ -1,5 +1,5 @@
 
-# PinchBar
+# PinchBar <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=XQTM9GSDUGMB2"><img align=right src="https://www.paypalobjects.com/en_US/i/btn/btn_donate_LG.gif" /></a>
 
 <picture>
 <source srcset="https://github.com/pnoqable/PinchBar/blob/main/Ressources/AppIcon128inverted.png" media="(prefers-color-scheme: dark)" />
@@ -67,8 +67,8 @@ At the moment, promotion is the top priority to make it known among Cubase users
 + ~~Adjustable sensivity~~
 + ~~Vertical zoom with modifier~~
 + ~~new preset for editors to pinch to change font size~~
-+ new "inverse" preset: map CMD+scroll to pinch gesture
-+ global and multiple simultanious presets
++ ~~new "inverse" preset: map CMD+scroll to pinch gesture~~
++ ~~global and multiple simultanious presets~~
 + Settings window
 + Any ideas? Please open an [issue](https://github.com/pnoqable/PinchBar/issues)
 
