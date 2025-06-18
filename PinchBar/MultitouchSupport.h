@@ -5,6 +5,7 @@ typedef void (^Callback)();
 @interface Multitouch : NSObject
 
 + (bool)start;
++ (bool)isStarted;
 
 + (NSInteger)onMousepad;
 + (NSInteger)onTrackpad;

@@ -174,6 +174,10 @@ static bool registerMultitouchDeviceAddedCallback(void) {
     return registerContactFrameCallback() && registerMultitouchDeviceAddedCallback();
 }
 
++ (bool)isStarted {
+    return multitouchDevices && ioNotificationPort;
+}
+
 + (NSInteger)onMousepad {
     std::lock_guard lock(mutex);
     return isTrackpad ? 0 : touchCount;

@@ -4,11 +4,11 @@ import Cocoa
     let repository = Repository()
     let settings = Settings()
     
-    lazy var eventTap = EventTap(callWhenStarted: Weak(statusMenu, StatusMenu.enableSubmenus).call)
+    var eventTaps: [EventTap] = []
     lazy var statusMenu = StatusMenu(repository: repository, settings: settings)
     
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        settings.callWhenMappingsChanged = Weak(self, AppDelegate.activeAppChanged).call
+        settings.callWhenMappingsChanged = WeakFunc(self, AppDelegate.activeAppChanged).call
         
         NSWorkspace.shared.notificationCenter
             .addObserver(self, selector: #selector(activeAppChanged),
@@ -24,7 +24,8 @@ import Cocoa
     
     @objc func activeAppChanged() {
         if let activeApp = NSWorkspace.shared.frontmostApplication?.localizedName {
-            eventTap.mappings = settings.mappings(for: activeApp)
+            eventTaps = settings.mappings(for: activeApp).compactMap(EventTap.init)
+            statusMenu.enableSubmenus(if: !eventTaps.isEmpty)
             statusMenu.updateSubmenus(activeApp: activeApp)
         }
     }

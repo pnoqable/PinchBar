@@ -6,6 +6,8 @@ protocol EventMapping {
     
     init(_ settings: Settings)
     
+    var eventMask: CGEventMask { get }
+    
     func map(_ event: CGEvent) -> [CGEvent]
 }
 
@@ -19,6 +21,8 @@ class SettingsHolder<Settings> {
 
 class FixLogiFlags: SettingsHolder<FixLogiFlags.Settings>, EventMapping {
     struct Settings: Codable, ComparableWithoutOrder {}
+    
+    var eventMask: CGEventMask { 1<<22 | 1<<12 }
     
     private var currentModifiers: CGEventFlags?
     
@@ -37,6 +41,8 @@ class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, Eve
     struct Settings: Codable, ComparableWithoutOrder {
         var sensivity: Double
     }
+    
+    var eventMask: CGEventMask { 1<<22 | 1<<5 }
     
     private var mapScrollToPinch = MapScrollToPinchState()
     
@@ -68,6 +74,8 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
         var onMousepad: Int
         var onTrackpad: Int
     }
+    
+    var eventMask: CGEventMask { 0b11011110 }
     
     private var mapMiddleClick = false
     private var skipTapEvent = false
@@ -124,6 +132,8 @@ class MultiClickMapping: SettingsHolder<MultiClickMapping.Settings>, EventMappin
         var tripleClickFlags: CGEventFlags
     }
     
+    var eventMask: CGEventMask { 0b11001 << 22 }
+    
     private var flags: CGEventFlags? = nil
     
     func map(_ event: CGEvent) -> [CGEvent] {
@@ -144,6 +154,8 @@ class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
         var oneAndAHalfTapFlags: CGEventFlags
         var doubleTapFlags: CGEventFlags
     }
+    
+    var eventMask: CGEventMask { 1 << 29 }
     
     private var isOneAndAHalfTap = false
     private var isDoubleTap = false
@@ -175,6 +187,8 @@ class OtherMouseScrollMapping: SettingsHolder<(OtherMouseScrollMapping.Settings)
         var noClicks: Bool
     }
     
+    var eventMask: CGEventMask { 0b111001 << 22 }
+    
     private var buttonDown = false
     
     func map(_ event: CGEvent) -> [CGEvent] {
@@ -205,6 +219,8 @@ class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, Eve
         var button: CGMouseButton
         var sensivity: Double
     }
+    
+    var eventMask: CGEventMask { 0b111001 << 22 }
     
     private var buttonDown = false
     private var deferredClick: CGEvent? = nil
@@ -263,6 +279,8 @@ class PinchMapping: SettingsHolder<PinchMapping.Settings>, EventMapping {
         var flags: CGEventFlags
         var sensivity: Double
     }
+    
+    var eventMask: CGEventMask { 1 << 29 }
     
     private var remainder: Double = 0 // subpixel residue of sent (integer) scroll events
     

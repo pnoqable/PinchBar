@@ -20,10 +20,10 @@ class StatusMenu {
         menu.autoenablesItems = false
         
         menu.addItem(NSMenuItem(title: "About PinchBar " + repository.version,
-                                Weak(repository, Repository.openGitHub).call))
+                                WeakFunc(repository, Repository.openGitHub).call))
         
         menu.addItem(NSMenuItem(title: "Check for Updates...",
-                                Weak(repository, Repository.checkForUpdates).call <- true))
+                                WeakFunc(repository, Repository.checkForUpdates).call <- true))
         
         menu.addItem(.separator())
         
@@ -44,10 +44,10 @@ class StatusMenu {
         menu.addItem(.separator())
         
         menu.addItem(NSMenuItem(title: "Export Settings...",
-                                Weak(settings, Settings.interactiveExport).call))
+                                WeakFunc(settings, Settings.interactiveExport).call))
         
         menu.addItem(NSMenuItem(title: "Import Settings...",
-                                Weak(settings, Settings.interactiveImport).call))
+                                WeakFunc(settings, Settings.interactiveImport).call))
         
         menu.addItem(.separator())
         
@@ -64,11 +64,11 @@ class StatusMenu {
         self.settings = settings
     }
     
-    func enableSubmenus() {
-        menuItemPreferences.state = .on
-        menuItemPreferences.isEnabled = false
-        menuItemGlobal.isEnabled = true
-        menuItemConfigure.isEnabled = true
+    func enableSubmenus(if condition: Bool) {
+        menuItemPreferences.state = condition ? .on : .off
+        menuItemPreferences.isEnabled = !condition
+        menuItemGlobal.isEnabled = condition
+        menuItemConfigure.isEnabled = condition
     }
     
     func updateSubmenus(activeApp: String) {

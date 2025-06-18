@@ -41,7 +41,7 @@ class Settings: WithUserDefaults {
         NSLog("presetNames: \(presetNames.joined(separator: ", "))")
         NSLog("appNames: \(appNames.joined(separator: ", "))")
         
-        setAllUserDefaultsChangedCallbacks(Weak(self, \.callWhenMappingsChanged).call)
+        setAllUserDefaultsChangedCallbacks(WeakFunc(self, \.callWhenMappingsChanged).call)
     }
     
     var enabledPreMappings: [any EventMapping] {

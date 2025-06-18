@@ -374,13 +374,20 @@ class UserDefault<T: Codable>: NSObject, UserDefaultProtocol {
     }
 }
 
-class Weak<T: AnyObject, M> {
+class WeakVar<T: AnyObject> {
     weak var instance: T?
+    
+    init(_ instance: T? = nil) {
+        self.instance = instance
+    }
+}
+
+class WeakFunc<T: AnyObject, M>: WeakVar<T> {
     let getter: UnaryFunc<T, M?>
     
     init(_ instance: T, _ getter: @escaping UnaryFunc<T, M?>) {
-        self.instance = instance
         self.getter = getter
+        super.init(instance)
     }
     
     var method: M? { instance.flatMap(getter) }

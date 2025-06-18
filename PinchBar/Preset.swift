@@ -10,6 +10,8 @@ struct Preset: EventMapping {
         mappings = settings.compactMapKeys(CGEventFlags.init ∘ UInt64.init).mapValues(PinchMapping.init)
     }
     
+    var eventMask: CGEventMask { mappings.values.map(\.eventMask).reduce(0, |) }
+    
     func map(_ event: CGEvent) -> [CGEvent] {
         mappings[event.flags.justModifiers]?.map(event) ?? [event]
     }
