@@ -39,12 +39,13 @@ class FixLogiFlags: SettingsHolder<FixLogiFlags.Settings>, EventMapping {
 
 class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, EventMapping {
     struct Settings: Codable, ComparableWithoutOrder {
+        var onMousepad: Int
         var sensivity: Double
     }
     
     var eventMask: CGEventMask { 1<<22 | 1<<5 }
     
-    private var mapScrollToPinch = MapScrollToPinchState()
+    private lazy var mapScrollToPinch = MapScrollToPinchState(settings.onMousepad)
     
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.type == .scrollWheel {

@@ -24,7 +24,7 @@ enum PreMapping: Comparable {
 
 extension PreMapping {
     static let fixLogiFlags     = Self.fixLogiFlags    (.init())
-    static let magicMouseZoom   = Self.magicMouseZoom  (.init(sensivity: 0.005))
+    static let magicMouseZoom   = Self.magicMouseZoom  (.init(onMousepad: 2, sensivity: 0.005))
     static let middleClick      = Self.middleClick     (.init(onMousepad: 2, onTrackpad: 3))
     static let multiClick       = Self.multiClick      (.init(button: .center,
                                                               doubleClickFlags: .maskCommand,
