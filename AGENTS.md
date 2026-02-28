@@ -9,8 +9,7 @@ This repository contains the macOS menu bar app **PinchBar**, which enables cont
 - **Entry point:** `PinchBar/AppDelegate.swift`
 - **Core domains:**
   - Multitouch event capture (`MultitouchSupport.h`, `MultitouchSupport.mm`)
-  - Event tapping and transformation (`EventTap.swift`, `EventMapping.swift`, `PreMapping.swift`, `Preset.swift`)
-  - Event state machines (`EventStateMachine.swift`)
+  - Event tapping and transformation (`EventTap.swift`, `EventMapping/`, `PreMapping.swift`)
   - User defaults-backed configuration (`Settings.swift`, `Extensions.swift` – `UserDefault` machinery)
   - Status bar UI and app integration (`StatusMenu.swift`, `Repository.swift`)
 
@@ -48,20 +47,28 @@ This project has no unit tests or test targets. Manual testing is required with 
 ```
 PinchBar/
 ├── AppDelegate.swift           # Application lifecycle, active app tracking, wires all components
+├── Assets.xcassets/            # Images and app icons
+├── EventMapping/               # Event mapping protocol, base class, and all concrete implementations
+│   ├── EventMapping.swift      # EventMapping protocol + SettingsHolder base class
+│   ├── FixLogiFlags.swift      # Workaround for Logitech mice flag glitches
+│   ├── MagicMouseZoomMapping.swift  # Scroll → magnify for Magic Mouse (+ MapScrollToPinchState)
+│   ├── MiddleClickMapping.swift     # Simulates middle click from multitouch taps
+│   ├── MultiClickMapping.swift      # Maps double/triple clicks to modifier flags
+│   ├── MultiTapMapping.swift        # Maps gesture taps (1.5-tap, double-tap) to modifiers
+│   ├── OtherMouseScrollMapping.swift # Maps other mouse buttons to horizontal scroll
+│   ├── OtherMouseZoomMapping.swift   # Maps other mouse button + scroll to magnify
+│   ├── PinchMapping.swift      # Core mapping: pinch → scroll/keys/pinch with modifiers
+│   └── Preset.swift            # App-specific preset configurations (composite EventMapping)
 ├── EventTap.swift              # CGEvent tap wrapper, owns EventMapping instances
-├── EventStateMachine.swift     # Protocol + MapScrollToPinchState for gesture state tracking
-├── EventMapping.swift          # EventMapping protocol and concrete implementations
-├── PreMapping.swift            # Enum-based pre-mapping configurations
-├── Preset.swift                # App-specific preset configurations
-├── Settings.swift              # User defaults-backed settings management
-├── Repository.swift            # Version checking, GitHub integration, update alerts
-├── StatusMenu.swift            # Status bar UI and menus
-├── Extensions.swift            # Functional helpers, operators, CGEvent extensions, UserDefault wrapper
 ├── Extensions.mm               # Objective-C++ bridge helpers
+├── Extensions.swift            # Functional helpers, operators, CGEvent extensions, UserDefault wrapper
+├── Info.plist                  # Bundle metadata (LSUIElement=true for menu bar app)
 ├── MultitouchSupport.h         # Multitouch API header
 ├── MultitouchSupport.mm        # Objective-C++ bridge to private multitouch APIs
-├── Assets.xcassets/            # Images and app icons
-└── Info.plist                  # Bundle metadata (LSUIElement=true for menu bar app)
+├── PreMapping.swift            # Enum-based pre-mapping configurations
+├── Repository.swift            # Version checking, GitHub integration, update alerts
+├── Settings.swift              # User defaults-backed settings management
+└── StatusMenu.swift            # Status bar UI and menus
 
 Ressources/                     # App icons and marketing assets (no code)
 PinchBar.xcodeproj/             # Xcode project
@@ -85,29 +92,26 @@ PinchBar.xcodeproj/             # Xcode project
    - Re-enables tap if disabled by timeout
    - Calls `mapping.map(event)` and posts each returned `CGEvent`
 
-**Event bitmask (line 21 of EventTap.swift):**
-```swift
-eventsOfInterest: 1<<29 | 1<<22 | 0b111<<25 | 0b1000011111110
-```
-This captures magnify events, scroll events, mouse events, and flags changed events.
+**Event bitmask:** Each mapping defines its own `eventMask` property. `EventTap` passes `mapping.eventMask` to `CGEvent.tapCreate`, so each tap only receives the events it needs.
 
 ### EventMapping Protocol
 
-All mappings conform to:
+Defined in `EventMapping/EventMapping.swift`. All mappings conform to:
 
 ```swift
 protocol EventMapping {
     associatedtype Settings: Codable
     var settings: Settings { get }
     init(_ settings: Settings)
+    var eventMask: CGEventMask { get }
     func map(_ event: CGEvent) -> [CGEvent]
 }
 ```
 
-**Concrete implementations:**
+**Concrete implementations** (each in its own file under `EventMapping/`):
 
 - `FixLogiFlags` - Workaround for Logitech mice flag glitches
-- `MagicMouseZoomMapping` - Maps scroll to magnify for Magic Mouse
+- `MagicMouseZoomMapping` - Maps scroll to magnify for Magic Mouse (includes `MapScrollToPinchState`)
 - `MiddleClickMapping` - Simulates middle click from multitouch taps
 - `MultiClickMapping` - Maps double/triple clicks to modifier flags
 - `MultiTapMapping` - Maps gesture taps (1.5-tap, double-tap) to modifiers
@@ -115,7 +119,7 @@ protocol EventMapping {
 - `OtherMouseZoomMapping` - Maps other mouse button + scroll to magnify
 - `PinchMapping` - Core mapping: pinch → scroll/keys/pinch with modifiers
 
-All use `SettingsHolder<Settings>` base class for settings storage.
+All use `SettingsHolder<Settings>` base class for settings storage (defined in `EventMapping/EventMapping.swift`).
 
 ### Settings and User Defaults
 
@@ -200,6 +204,7 @@ Use this for callbacks to avoid retain cycles.
 
 ```objc
 + (bool)start;                      // Initialize multitouch tracking
++ (bool)isStarted;                  // Whether multitouch tracking is active
 + (NSInteger)onMousepad;            // Current mousepad touch count (0 if trackpad)
 + (NSInteger)onTrackpad;            // Current trackpad touch count (0 if mousepad)
 + (bool)isOneAndAHalfTap;           // Gesture: tap, lift, tap-hold
@@ -217,7 +222,7 @@ Use this for callbacks to avoid retain cycles.
 
 ### Event State Machines
 
-**MapScrollToPinchState:**
+**MapScrollToPinchState** (in `EventMapping/MagicMouseZoomMapping.swift`):
 
 Tracks scroll gesture phases to map scroll events to pinch for Magic Mouse.
 
@@ -461,12 +466,13 @@ Users can disable individual pre-mappings via status menu.
 
 ### Adding a New EventMapping
 
-1. Define `Settings` struct conforming to `Codable` and `ComparableWithoutOrder`
-2. Create class inheriting `SettingsHolder<Settings>` and conforming to `EventMapping`
-3. Implement `map(_ event: CGEvent) -> [CGEvent]`
-4. Add case to `PreMapping` enum if global, or use in `Preset` if app-specific
-5. Update `Settings.Defaults` if new preset
-6. Test with target app
+1. Create a new Swift file in the `EventMapping/` group
+2. Define `Settings` struct conforming to `Codable` and `ComparableWithoutOrder`
+3. Create class inheriting `SettingsHolder<Settings>` and conforming to `EventMapping`
+4. Implement `eventMask` and `map(_ event: CGEvent) -> [CGEvent]`
+5. Add case to `PreMapping` enum if global, or use in `Preset` if app-specific
+6. Update `Settings.Defaults` if new preset
+7. Test with target app
 
 ### Adding a New Preset
 
@@ -477,13 +483,9 @@ Users can disable individual pre-mappings via status menu.
 
 ### Modifying Event Tap Interest Mask
 
-Event tap interest mask in `EventTap.swift:21`:
+Each `EventMapping` implementation defines its own `eventMask` property. `EventTap` passes this mask to `CGEvent.tapCreate`, so each tap only receives the events its mapping needs. Common bit patterns:
 
-```swift
-eventsOfInterest: 1<<29 | 1<<22 | 0b111<<25 | 0b1000011111110
-```
-
-- Bit 29: Magnify events (CGEventType.init(rawValue: 29))
+- Bit 29: Magnify events (`CGEventType.init(rawValue: 29)`)
 - Bit 22: ScrollWheel events
 - Bits 25-27: Mouse moved/dragged events
 - Bits 1-9: Mouse down/up, flags changed
@@ -597,6 +599,7 @@ From project inspection:
 ### When Adding Features
 
 1. **Follow existing patterns:**
+   - Create new mapping files in the `EventMapping/` group
    - Use `SettingsHolder` for new mappings
    - Use `@UserDefault` for persistence
    - Use `WeakFunc` for callbacks

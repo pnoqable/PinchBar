@@ -1,5 +1,40 @@
 import Cocoa
 
+class MagicMouseZoomMapping: SettingsHolder<MagicMouseZoomMapping.Settings>, EventMapping {
+    struct Settings: Codable, ComparableWithoutOrder {
+        var onMousepad: Int
+        var sensivity: Double
+    }
+    
+    var eventMask: CGEventMask { 1<<22 | 1<<5 }
+    
+    private lazy var mapScrollToPinch = MapScrollToPinchState(settings.onMousepad)
+    
+    func map(_ event: CGEvent) -> [CGEvent] {
+        if event.type == .scrollWheel {
+            let transition = mapScrollToPinch.feed(event)
+            
+            if mapScrollToPinch.state == .mapping || transition == .finishMapping {
+                guard event.scrollPhase != .other else { return [] }
+                return [CGEvent(magnifyEventSource: nil,
+                                magnification: settings.sensivity * Double(event.scrollPointDeltaAxis1),
+                                phase: event.scrollPhase)!.with(flags: event.flags)]
+            } else if mapScrollToPinch.state.isDropState || transition == .finishDropping {
+                return []
+            }
+        }
+        
+        if event.type == .mouseMoved, mapScrollToPinch.state == .mapping {
+            return [event,
+                    CGEvent(magnifyEventSource: nil, magnification: 0, phase: .changed)!.with(flags: event.flags)]
+        }
+        
+        return [event]
+    }
+}
+
+// MARK: - MapScrollToPinchState
+
 protocol EventStateMachine {
     associatedtype State
     associatedtype Transition
