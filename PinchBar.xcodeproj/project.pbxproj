@@ -29,6 +29,7 @@
 		8459492327FA287C00DBB447 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		8459492E27FA28A100DBB447 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		846AF3CB2804F5FC00B3E06F /* Repository.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Repository.swift; sourceTree = "<group>"; };
+		8487F3832F539AD300F3B6E5 /* TODO.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = TODO.md; sourceTree = "<group>"; };
 		8494F81F2BDD6AE20077B612 /* PreMapping.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PreMapping.swift; sourceTree = "<group>"; };
 		84A304C828C686C70087F4F6 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		84A7738D2F2EA97800F7C105 /* AGENTS.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = AGENTS.md; sourceTree = "<group>"; };
@@ -75,6 +76,7 @@
 				84A7738D2F2EA97800F7C105 /* AGENTS.md */,
 				84D7DA58290085BF0013E257 /* LICENSE.md */,
 				84A304C828C686C70087F4F6 /* README.md */,
+				8487F3832F539AD300F3B6E5 /* TODO.md */,
 			);
 			sourceTree = "<group>";
 		};
