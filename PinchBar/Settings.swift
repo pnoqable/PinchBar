@@ -45,7 +45,7 @@ class Settings: WithUserDefaults {
     }
     
     var enabledPreMappings: [any EventMapping] {
-        preMappingsSorted.filter((!) ∘ disabledPMs.contains ∘ \.key).map(\.value.mapping)
+        preMappingsSorted.filter(!disabledPMs.contains ∘ \.key).map(\.value.mapping)
     }
     
     func mappings(for appName: String) -> [any EventMapping] {

@@ -10,7 +10,7 @@ This repository contains the macOS menu bar app **PinchBar**, which enables cont
 - **Core domains:**
   - Multitouch event capture (`MultitouchSupport.h`, `MultitouchSupport.mm`)
   - Event tapping and transformation (`EventTap.swift`, `EventMapping/`, `PreMapping.swift`)
-  - User defaults-backed configuration (`Settings.swift`, `Extensions.swift` – `UserDefault` machinery)
+  - User defaults-backed configuration (`Settings.swift`, `Utilities/UserDefault.swift`)
   - Status bar UI and app integration (`StatusMenu.swift`, `Repository.swift`)
 
 ## Building and Running
@@ -60,15 +60,22 @@ PinchBar/
 │   ├── PinchMapping.swift      # Core mapping: pinch → scroll/keys/pinch with modifiers
 │   └── Preset.swift            # App-specific preset configurations (composite EventMapping)
 ├── EventTap.swift              # CGEvent tap wrapper, owns EventMapping instances
-├── Extensions.mm               # Objective-C++ bridge helpers
-├── Extensions.swift            # Functional helpers, operators, CGEvent extensions, UserDefault wrapper
 ├── Info.plist                  # Bundle metadata (LSUIElement=true for menu bar app)
 ├── MultitouchSupport.h         # Multitouch API header
 ├── MultitouchSupport.mm        # Objective-C++ bridge to private multitouch APIs
 ├── PreMapping.swift            # Enum-based pre-mapping configurations
 ├── Repository.swift            # Version checking, GitHub integration, update alerts
 ├── Settings.swift              # User defaults-backed settings management
-└── StatusMenu.swift            # Status bar UI and menus
+├── StatusMenu.swift            # Status bar UI and menus
+└── Utilities/                  # Reusable helpers, extensions, and infrastructure
+    ├── AppKitHelpers.swift     # WithTargetAndAction protocol, NSMenuItem convenience init
+    ├── CGEventExtensions.swift # CGEvent properties, Phase, Subtype, factory functions
+    ├── CodableHelpers.swift    # ArbitraryCodingKey, plist serialization helpers
+    ├── CollectionExtensions.swift  # Array, Collection, Dictionary extensions, ComparableWithoutOrder
+    ├── NSApplicationSwizzling.mm   # Method swizzling for modal window activation
+    ├── Operators.swift         # Custom operators (<-, <--, ∘, ∈, ∉), typealiases, returnFirst
+    ├── UserDefault.swift       # @UserDefault property wrapper, WithUserDefaults protocol
+    └── WeakReference.swift     # WeakVar, WeakFunc for prevent retain cycles in callbacks
 
 Ressources/                     # App icons and marketing assets (no code)
 PinchBar.xcodeproj/             # Xcode project
@@ -150,7 +157,7 @@ All use `SettingsHolder<Settings>` base class for settings storage (defined in `
 2. Add default value to `Settings.Defaults` if auto-merge desired
 3. Will automatically appear in export/import via reflection
 
-### Functional Helpers (`Extensions.swift`)
+### Functional Helpers (`Utilities/Operators.swift`)
 
 **Custom operators:**
 
@@ -173,7 +180,7 @@ settings.compactMapKeys(CGEventFlags.init ∘ UInt64.init)
 event.type ∈ .leftMouseDown ... .rightMouseUp
 ```
 
-**CGEvent extensions:**
+**CGEvent extensions** (`Utilities/CGEventExtensions.swift`):
 
 - `mouseButton`, `mouseClickState`, `mouseDeltaX/Y`
 - `scrollDeltaAxis1`, `scrollPointDeltaAxis1`, `scrollUnit`, `scrollUnitsDeltaAxis1`
@@ -182,7 +189,7 @@ event.type ∈ .leftMouseDown ... .rightMouseUp
 - `magnification`, `magnificationPhase`
 - Factory functions for flags and magnify events
 
-**Weak reference helper:**
+**Weak reference helper** (`Utilities/WeakReference.swift`):
 
 ```swift
 WeakFunc<T: AnyObject, M>  // Holds weak reference + method getter
