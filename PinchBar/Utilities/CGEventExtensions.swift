@@ -13,6 +13,10 @@ extension CGEventFlags: @retroactive Codable, @retroactive Hashable {
 }
 
 extension CGEventType: @retroactive Comparable {
+    static var mouseDown: [CGEventType] = [.leftMouseDown, .rightMouseDown, .otherMouseDown]
+    static var mouseUp: [CGEventType] = [.leftMouseUp, .rightMouseUp, .otherMouseUp]
+    static var mouseDragged: [CGEventType] = [.leftMouseDragged, .rightMouseDragged, .otherMouseDragged]
+    
     public static func < (lhs: CGEventType, rhs: CGEventType) -> Bool {
         lhs.rawValue < rhs.rawValue
     }
@@ -51,14 +55,26 @@ extension CGEvent {
         set { setIntegerValueField(.mouseEventDeltaY, value: newValue) }
     }
     
+    var mouseDeltaAbsSum: Int64 { abs(mouseDeltaX) + abs(mouseDeltaY) }
+    
     var scrollDeltaAxis1: Int64 {
         get { getIntegerValueField(.scrollWheelEventDeltaAxis1) }
         set { setIntegerValueField(.scrollWheelEventDeltaAxis1, value: newValue) }
     }
     
+    var scrollDeltaAxis2: Int64 {
+        get { getIntegerValueField(.scrollWheelEventDeltaAxis2) }
+        set { setIntegerValueField(.scrollWheelEventDeltaAxis2, value: newValue) }
+    }
+    
     var scrollPointDeltaAxis1: Int64 {
         get { getIntegerValueField(.scrollWheelEventPointDeltaAxis1) }
         set { setIntegerValueField(.scrollWheelEventPointDeltaAxis1, value: newValue) }
+    }
+    
+    var scrollPointDeltaAxis2: Int64 {
+        get { getIntegerValueField(.scrollWheelEventPointDeltaAxis2) }
+        set { setIntegerValueField(.scrollWheelEventPointDeltaAxis2, value: newValue) }
     }
     
     var scrollUnit: CGScrollEventUnit {
@@ -68,6 +84,10 @@ extension CGEvent {
     
     var scrollUnitsDeltaAxis1: Int32 {
         get { Int32(scrollUnit == .pixel ? scrollPointDeltaAxis1 : scrollDeltaAxis1) }
+    }
+    
+    var scrollUnitsDeltaAxis2: Int32 {
+        get { Int32(scrollUnit == .pixel ? scrollPointDeltaAxis2 : scrollDeltaAxis2) }
     }
     
     var scrollPhase: Phase {

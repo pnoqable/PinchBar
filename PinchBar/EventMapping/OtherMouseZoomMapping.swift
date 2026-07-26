@@ -6,44 +6,51 @@ class OtherMouseZoomMapping: SettingsHolder<OtherMouseZoomMapping.Settings>, Eve
         var sensivity: Double
     }
     
-    var eventMask: CGEventMask { 0b111001 << 22 }
+    var eventMask: CGEventMask { 0b111001 << 22 | 0b11011110 }
     
     private var buttonDown = false
-    private var deferredClick: CGEvent? = nil
+    private var deferredEvents: [CGEvent] = []
+    private var mouseDeltaAbsSum: Int64 = 0
     private var mapScrollToPinch = false
     
     func map(_ event: CGEvent) -> [CGEvent] {
-        if event.type == .otherMouseDown, event.mouseButton == settings.button {
+        if event.type ∈ CGEventType.mouseDown, event.mouseButton == settings.button {
             buttonDown = true
-            deferredClick = event
+            deferredEvents = [event]
+            mouseDeltaAbsSum = 0
             return []
         } else if buttonDown, event.type == .scrollWheel {
             guard event.scrollPointDeltaAxis1 != 0 else { return [] }
             let phase: CGEvent.Phase = mapScrollToPinch ? .changed : .began
             
             if !mapScrollToPinch {
-                guard deferredClick != nil else { return [] }
+                guard deferredEvents.count > 0 else { return [] }
                 mapScrollToPinch = true
-                deferredClick = nil
+                deferredEvents = []
             }
             
             return [CGEvent(magnifyEventSource: nil, 
                             magnification: settings.sensivity * Double(event.scrollPointDeltaAxis1),
                             phase: phase)!.with(flags: event.flags)]
-        } else if event.type == .otherMouseDragged, event.mouseButton == settings.button {
-            guard event.mouseDeltaX != 0 || event.mouseDeltaY != 0 else { return [] }
-            if let lastEvent = deferredClick {
-                deferredClick = nil
-                return [lastEvent, event]
+        } else if event.type ∈ CGEventType.mouseDragged, event.mouseButton == settings.button {
+            if case let lastEvents = deferredEvents, lastEvents.count > 0 {
+                mouseDeltaAbsSum += event.mouseDeltaAbsSum
+                if mouseDeltaAbsSum < 5 {
+                    deferredEvents = deferredEvents + event
+                } else {
+                    deferredEvents = []
+                    return lastEvents + event
+                }
             } else if mapScrollToPinch {
                 event.type = .mouseMoved
                 return [event,
                         CGEvent(magnifyEventSource: nil, magnification: 0, phase: .changed)!.with(flags: .maskNoFlags)]
             }
-        } else if event.type == .otherMouseUp, event.mouseButton == settings.button {
+        } else if event.type ∈ CGEventType.mouseUp, event.mouseButton == settings.button {
             buttonDown = false
-            if let deferredClick {
-                return [deferredClick, event]
+            if case let lastEvents = deferredEvents, lastEvents.count > 0 {
+                deferredEvents = []
+                return lastEvents + event
             } else if mapScrollToPinch {
                 mapScrollToPinch = false
                 return [CGEvent(magnifyEventSource: nil, magnification: 0, phase: .ended)!.with(flags: event.flags)]
