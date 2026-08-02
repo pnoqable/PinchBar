@@ -17,6 +17,7 @@
 		84B832422966CAD10083FB73 /* StatusMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84B832412966CAD10083FB73 /* StatusMenu.swift */; };
 		84C256C3294228DC0087E286 /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 84C256C2294228DC0087E286 /* Settings.swift */; };
 		84D81C6E299A507F00EF33DB /* IOKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 84D81C6D299A507E00EF33DB /* IOKit.framework */; };
+		84E8D73781B60DBED758528C /* CoreBluetooth.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 932116FFA43DE49FD4DA7034 /* CoreBluetooth.framework */; };
 		84F43DF9299971A100B28740 /* MultitouchSupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 84F43DF8299971A100B28740 /* MultitouchSupport.mm */; };
 /* End PBXBuildFile section */
 
@@ -38,11 +39,13 @@
 		84D7DA58290085BF0013E257 /* LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = LICENSE.md; sourceTree = "<group>"; };
 		84D81C6D299A507E00EF33DB /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = System/Library/Frameworks/IOKit.framework; sourceTree = SDKROOT; };
 		84F43DF8299971A100B28740 /* MultitouchSupport.mm */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.objcpp; path = MultitouchSupport.mm; sourceTree = "<group>"; };
+		932116FFA43DE49FD4DA7034 /* CoreBluetooth.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreBluetooth.framework; path = System/Library/Frameworks/CoreBluetooth.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8487F3562F536FB800F3B6E5 /* EventMapping */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = EventMapping; sourceTree = "<group>"; };
 		8487F37A2F53942300F3B6E5 /* Utilities */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = Utilities; sourceTree = "<group>"; };
+		84E6C2D3301F2FBE00457890 /* HIDPP */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = HIDPP; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -52,6 +55,7 @@
 			files = (
 				844F3B2B299A4E3A00C7953E /* MultitouchSupport.framework in Frameworks */,
 				84D81C6E299A507F00EF33DB /* IOKit.framework in Frameworks */,
+				84E8D73781B60DBED758528C /* CoreBluetooth.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -63,6 +67,7 @@
 			children = (
 				84D81C6D299A507E00EF33DB /* IOKit.framework */,
 				844F3B2A299A4E3900C7953E /* MultitouchSupport.framework */,
+				932116FFA43DE49FD4DA7034 /* CoreBluetooth.framework */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -95,6 +100,7 @@
 				8459492327FA287C00DBB447 /* Assets.xcassets */,
 				8487F3562F536FB800F3B6E5 /* EventMapping */,
 				8403F28B27FF191600CAAC3C /* EventTap.swift */,
+				84E6C2D3301F2FBE00457890 /* HIDPP */,
 				8459492E27FA28A100DBB447 /* Info.plist */,
 				844469DB29993ADB00D3D424 /* MultitouchSupport.h */,
 				84F43DF8299971A100B28740 /* MultitouchSupport.mm */,
@@ -125,6 +131,7 @@
 			fileSystemSynchronizedGroups = (
 				8487F3562F536FB800F3B6E5 /* EventMapping */,
 				8487F37A2F53942300F3B6E5 /* Utilities */,
+				84E6C2D3301F2FBE00457890 /* HIDPP */,
 			);
 			name = PinchBar;
 			productName = PinchBar;

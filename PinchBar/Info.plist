@@ -4,5 +4,7 @@
 <dict>
 	<key>LSUIElement</key>
 	<true/>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>PinchBar reads Logitech mouse button states (HID++) directly over Bluetooth.</string>
 </dict>
 </plist>
