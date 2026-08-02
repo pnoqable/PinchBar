@@ -67,6 +67,7 @@ final class LogiBLEButtonSource: NSObject, HIDPPButtonSource {
     private var devices: [UUID: DeviceState] = [:]
     
     var onButtonEvent: ((HIDPPDeviceID, UInt16, Bool) -> Void)?
+    var onDeviceReady: ((HIDPPDeviceID) -> Void)?
 
     override init() {
         super.init()
@@ -126,6 +127,7 @@ final class LogiBLEButtonSource: NSObject, HIDPPButtonSource {
     private func finishSetup(_ state: DeviceState, isMouse: Bool) {
         if isMouse {
             state.phase = .ready
+            onDeviceReady?(state.deviceID)
         } else {
             state.phase = .notAMouse
             central.cancelPeripheralConnection(state.peripheral)

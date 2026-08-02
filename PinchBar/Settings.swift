@@ -3,6 +3,7 @@ import Cocoa
 class Settings: WithUserDefaults {
     struct Defaults {
         static let preMappings = ["Fix Logi Flags":     PreMapping.fixLogiFlags,
+                                  "Logi Mouse Zoom":    PreMapping.logiMouseZoom,
                                   "Magic Mouse Zoom":   PreMapping.magicMouseZoom,
                                   "Middle Click":       PreMapping.middleClick,
                                   "Multi Click":        PreMapping.multiClick,

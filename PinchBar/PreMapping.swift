@@ -2,6 +2,7 @@ import Foundation
 
 enum PreMapping: Comparable {
     case fixLogiFlags    (FixLogiFlags.Settings)
+    case logiMouseZoom   (LogiMouseZoomMapping.Settings)
     case magicMouseZoom  (MagicMouseZoomMapping.Settings)
     case middleClick     (MiddleClickMapping.Settings)
     case multiClick      (MultiClickMapping.Settings)
@@ -12,6 +13,7 @@ enum PreMapping: Comparable {
     var mapping: any EventMapping {
         switch self {
         case let .fixLogiFlags    (settings): return FixLogiFlags           (settings)
+        case let .logiMouseZoom   (settings): return LogiMouseZoomMapping   (settings)
         case let .magicMouseZoom  (settings): return MagicMouseZoomMapping  (settings)
         case let .middleClick     (settings): return MiddleClickMapping     (settings)
         case let .multiClick      (settings): return MultiClickMapping      (settings)
@@ -24,20 +26,22 @@ enum PreMapping: Comparable {
 
 extension PreMapping {
     static let fixLogiFlags     = Self.fixLogiFlags    (.init())
-    static let magicMouseZoom   = Self.magicMouseZoom  (.init(onMousepad: 2, sensivity: 0.005))
+    static let logiMouseZoom    = Self.logiMouseZoom   (.init(cid: 86, sensivity: 0.001))
+    static let magicMouseZoom   = Self.magicMouseZoom  (.init(onMousepad: 2, sensivity: 0.004))
     static let middleClick      = Self.middleClick     (.init(onMousepad: 2, onTrackpad: 3))
-    static let multiClick       = Self.multiClick      (.init(button: .center,
+    static let multiClick       = Self.multiClick      (.init(button: .fifth,
                                                               doubleClickFlags: .maskCommand,
                                                               tripleClickFlags: .maskAlternate))
     static let multiTap         = Self.multiTap        (.init(oneAndAHalfTapFlags: .maskAlternate,
                                                               doubleTapFlags:      .maskCommand))
-    static let otherMouseScroll = Self.otherMouseScroll(.init(button: .fourth, noClicks: true))
-    static let otherMouseZoom   = Self.otherMouseZoom  (.init(button: .center, sensivity: 0.003))
+    static let otherMouseScroll = Self.otherMouseScroll(.init(button: .fourth))
+    static let otherMouseZoom   = Self.otherMouseZoom  (.init(button: .fifth, sensivity: 0.001))
 }
 
 extension PreMapping: Codable {
     enum CodingKeys: CodingKey {
-        case fixLogiFlags, magicMouseZoom, middleClick, multiClick, multiTap, otherMouseScroll, otherMouseZoom
+        case fixLogiFlags, logiMouseZoom, magicMouseZoom, middleClick, multiClick, multiTap,
+             otherMouseScroll, otherMouseZoom
     }
     
     init(from decoder: Decoder) throws {
@@ -51,6 +55,7 @@ extension PreMapping: Codable {
         do {
             switch key {
             case .fixLogiFlags:     self = .fixLogiFlags    (try c.decode(FixLogiFlags.Settings.self,            forKey: key))
+            case .logiMouseZoom:    self = .logiMouseZoom   (try c.decode(LogiMouseZoomMapping.Settings.self,    forKey: key))
             case .magicMouseZoom:   self = .magicMouseZoom  (try c.decode(MagicMouseZoomMapping.Settings.self,   forKey: key))
             case .middleClick:      self = .middleClick     (try c.decode(MiddleClickMapping.Settings.self,      forKey: key))
             case .multiClick:       self = .multiClick      (try c.decode(MultiClickMapping.Settings.self,       forKey: key))
@@ -69,6 +74,7 @@ extension PreMapping: Codable {
         
         switch self {
         case let .fixLogiFlags(settings):     try c.encode(settings, forKey: .fixLogiFlags)
+        case let .logiMouseZoom(settings):    try c.encode(settings, forKey: .logiMouseZoom)
         case let .magicMouseZoom(settings):   try c.encode(settings, forKey: .magicMouseZoom)
         case let .middleClick(settings):      try c.encode(settings, forKey: .middleClick)
         case let .multiClick(settings):       try c.encode(settings, forKey: .multiClick)

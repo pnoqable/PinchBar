@@ -189,9 +189,8 @@ damit ein zweites Backend später einfach ergänzt werden kann, ohne Consumer-Co
   Consumer-Code bleibt unverändert.
 - **Nicht Teil dieser Umsetzung** – weiterhin offen, kein Code vorhanden.
 
-## Follow-up (explizit außerhalb des aktuellen Scopes, weiterhin offen)
+## Follow-up – umgesetzt
 
-Einbindung als PinchBar-`EventMapping` (`LogiThumbButtonMapping`), das konfigurierte CIDs in
-synthetische `otherMouseDown/Up`-Events übersetzt (Muster: `MiddleClickMapping.onTrackpadTap()` +
-Sonderfall-Wiring in `EventTap.init` analog Zeile 40–42) und über `PreMapping`/`Settings`/`StatusMenu`
-(automatisch) konfigurierbar wird. Wird erst geplant, wenn dieser Folgeschritt angegangen wird.
+`LogiMouseZoomMapping` ist als globales `PreMapping` umgesetzt. Es kombiniert eine konfigurierte
+HID++-CID mit dem Scrollrad zu Magnify-Events und arbeitet transportagnostisch über
+`LogiHIDPP`, also sowohl mit BLE als auch mit USB-Receivern.

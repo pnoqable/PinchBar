@@ -44,6 +44,10 @@ class EventTap {
         if !Multitouch.isStarted() && !Multitouch.start() {
             NSLog("Cannot start Multitouch Support")
         }
+        
+        LogiHIDPP.shared.onDeviceReady = { device in
+            NSLog("Logitech Mouse connected: \(device.name)")
+        }
     }
     
     deinit {

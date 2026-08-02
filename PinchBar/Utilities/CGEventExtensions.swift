@@ -77,6 +77,8 @@ extension CGEvent {
         set { setIntegerValueField(.scrollWheelEventPointDeltaAxis2, value: newValue) }
     }
     
+    var scrollPointDeltaSum: Int64 { scrollPointDeltaAxis1 + scrollPointDeltaAxis2 }
+    
     var scrollUnit: CGScrollEventUnit {
         get { getIntegerValueField(.scrollWheelEventIsContinuous) != 0 ? .pixel : .line }
         set { setIntegerValueField(.scrollWheelEventIsContinuous, value: newValue == .pixel ? 1 : 0) }
