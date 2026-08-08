@@ -8,9 +8,8 @@ import Foundation
 final class LogiHIDPP {
     static let shared = LogiHIDPP()
 
-    /// One entry per supported transport. A future USB dongle backend is added here simply
-    /// (`LogiUSBButtonSource()`), without any consumer code needing to change.
-    private let backends: [any HIDPPButtonSource] = [LogiBLEButtonSource()]
+    /// One entry per supported transport. Consumers remain independent of the connected transport.
+    private let backends: [any HIDPPButtonSource] = [LogiBLEButtonSource(), LogiUSBButtonSource()]
 
     /// Called whenever a diverted button changes state on any backend. Depending on the
     /// transport, this may be called on any thread.

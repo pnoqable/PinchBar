@@ -176,7 +176,7 @@ damit ein zweites Backend später einfach ergänzt werden kann, ohne Consumer-Co
 
 ---
 
-## Ausblick: Backend 2 (USB-Dongle) – nur grob skizziert, keine Detailplanung jetzt
+## Backend 2 (USB-Dongle) – umgesetzt nach diesem Plan
 
 - `LogiUSBButtonSource: HIDPPButtonSource` auf Basis von `IOHIDManager` (öffentliche IOKit-API;
   `IOKit.framework` ist bereits gelinkt), analog `hidpp_thumb_buttons.py`:
@@ -185,9 +185,11 @@ damit ein zweites Backend später einfach ergänzt werden kann, ohne Consumer-Co
     anderes Framing drumherum.
   - Device-Index-Scan 0x01–0x06 + CID-Tabellen-Abgleich zur Mausidentifikation (wie
     `find_mx_anywhere_3` in der Python-Referenz).
-- Gleiche `HIDPPButtonSource`-Schnittstelle → `LogiHIDPP` kann später beide Backends parallel betreiben;
+- Gleiche `HIDPPButtonSource`-Schnittstelle → `LogiHIDPP` betreibt BLE- und USB-Backend parallel;
   Consumer-Code bleibt unverändert.
-- **Nicht Teil dieser Umsetzung** – weiterhin offen, kein Code vorhanden.
+- Umsetzung und Unifying-Live-Verifikation sind in
+  `docs/logi-hidpp-usb-dongle-plan.md` dokumentiert. Bolt sowie mehrere Receiver/Mäuse stehen
+  weiterhin zur Hardware-Verifikation aus.
 
 ## Follow-up – umgesetzt
 

@@ -1,8 +1,12 @@
-# Implementierungsplan: `LogiThumbButtonMapping` (POC – Daumentaste + Scrollrad → Pinch-Zoom)
+# Implementierungsplan: `LogiMouseZoomMapping` (POC – Daumentaste + Scrollrad → Pinch-Zoom)
 
-**Status: 📝 Geplant, noch nicht umgesetzt.** Baut auf der bereits umgesetzten Basis aus
-`docs/logi-hidpp-thumb-buttons-plan.md` (`PinchBar/HIDPP/*`) auf und schließt genau die dort als
-Follow-up skizzierte Lücke: Einbindung als PinchBar-`EventMapping`.
+**Status: Implementiert und mit BLE sowie Unifying-USB verifiziert.** Die Umsetzung heißt
+`LogiMouseZoomMapping` (nicht `LogiThumbButtonMapping`) und baut auf
+`PinchBar/HIDPP/*` auf. Sie schließt die ursprünglich als Follow-up skizzierte Einbindung als
+PinchBar-`EventMapping`.
+
+Die nachfolgenden Code-Namen dokumentieren den ursprünglichen Plan. Die Umsetzung verwendet
+`LogiMouseZoomMapping`, `logiMouseZoom` und den Menüeintrag `Logi Mouse Zoom`.
 
 **Scope dieser Iteration (POC):** *Eine* fest verdrahtete Aktion – „konfigurierbare Daumentaste
 gedrückt halten + Scrollrad drehen → Pinch-Zoom“ – als neues, generisches `PreMapping` (global,
@@ -262,7 +266,7 @@ bei der bisher einzigen getesteten Hardware.
 
 ---
 
-## Out of Scope (explizit nicht Teil dieses POC-Plans)
+## Verbleibender Scope außerhalb dieses POCs
 
 - **Konfigurations-UI für `cid`/Aktionstyp** über den reinen An/Aus-Toggle im Status-Menü hinaus
   (kein Sub-Menü zur Tastenauswahl, keine Sensitivitätsregler) – deckt sich mit dem offenen
@@ -274,9 +278,8 @@ bei der bisher einzigen getesteten Hardware.
 - **Geräte-spezifische Zuordnung** (verschiedene CIDs/Aktionen für unterschiedliche gleichzeitig
   gekoppelte Logi-Mäuse) – bräuchte eine stabile, exportierbare Geräte-Identifikation statt der
   transienten Bluetooth-`UUID` in `HIDPPDeviceID`.
-- **USB-Dongle-Backend** (`LogiUSBButtonSource`) – weiterhin nur grob skizziert in
-  `docs/logi-hidpp-thumb-buttons-plan.md`, hier nicht adressiert; `LogiThumbButtonMapping` ist
-  aber bereits backend-agnostisch (arbeitet nur gegen `LogiHIDPP`/`HIDPPButtonSource`), profitiert
-  also automatisch von einem späteren zweiten Backend ohne eigene Änderung.
+- **Bolt- und Multi-Receiver-Verifikation:** `LogiUSBButtonSource` ist umgesetzt und der
+  Unifying-Pfad live verifiziert. Die Mapping-Schicht bleibt transportagnostisch; Bolt und mehrere
+  Receiver/Mäuse benötigen nur noch Hardware-Tests, keine Mapping-Änderung.
 - **App-spezifisches Scoping** (`Preset` statt `PreMapping`) – die Daumentaste ist als globale
   Geräteeigenschaft modelliert, nicht als App-spezifisches Zoom-Verhalten wie `PinchMapping`.
