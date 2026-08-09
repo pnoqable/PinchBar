@@ -56,6 +56,12 @@ Callback onTrackpadTap = nil;
 
 #pragma mark private functions
 
+static void contactFrameCallback(MTDeviceRef device, MTTouchRef touches, int count, double time);
+static bool registerContactFrameCallback(void);
+static bool registerMultitouchDeviceAddedCallback(void);
+static void unregisterContactFrameCallback(void);
+static void unregisterMultitouchDeviceAddedCallback(void);
+
 static void contactFrameCallback(MTDeviceRef device, MTTouchRef touches, int count, double time) {
     int width, height;
     MTDeviceGetSensorSurfaceDimensions(device, &width, &height);
@@ -106,14 +112,7 @@ static void contactFrameCallback(MTDeviceRef device, MTTouchRef touches, int cou
 }
 
 static bool registerContactFrameCallback(void) {
-    if(multitouchDevices) {
-        for(int i=0; i<CFArrayGetCount(multitouchDevices); i++) {
-            MTDeviceRef device = CFArrayGetValueAtIndex(multitouchDevices, i);
-            MTUnregisterContactFrameCallback(device, contactFrameCallback);
-            MTDeviceStop(device);
-        }
-        CFRelease(multitouchDevices);
-    }
+    unregisterContactFrameCallback();
     
     multitouchDevices = MTDeviceCreateList();
     
@@ -128,6 +127,20 @@ static bool registerContactFrameCallback(void) {
     }
     
     return true;
+}
+
+static void unregisterContactFrameCallback(void) {
+    if(!multitouchDevices) {
+        return;
+    }
+
+    for(int i=0; i<CFArrayGetCount(multitouchDevices); i++) {
+        MTDeviceRef device = CFArrayGetValueAtIndex(multitouchDevices, i);
+        MTUnregisterContactFrameCallback(device, contactFrameCallback);
+        MTDeviceStop(device);
+    }
+    CFRelease(multitouchDevices);
+    multitouchDevices = NULL;
 }
 
 static void releaseIOObjects(io_iterator_t iterator) {
@@ -166,44 +179,74 @@ static bool registerMultitouchDeviceAddedCallback(void) {
     return true;
 }
 
+static void unregisterMultitouchDeviceAddedCallback(void) {
+    if(!ioNotificationPort) {
+        return;
+    }
+
+    CFRunLoopRemoveSource(CFRunLoopGetMain(), IONotificationPortGetRunLoopSource(ioNotificationPort),
+                          kCFRunLoopDefaultMode);
+    IONotificationPortDestroy(ioNotificationPort);
+    ioNotificationPort = NULL;
+}
+
 #pragma mark implementation
 
 @implementation Multitouch
 
-+ (bool)start {
-    return registerContactFrameCallback() && registerMultitouchDeviceAddedCallback();
++ (Multitouch*)shared {
+    static Multitouch* instance = nil;
+    @synchronized(self) {
+        if(!instance) {
+            instance = [[self alloc] init];
+        }
+    }
+    return instance;
 }
 
-+ (bool)isStarted {
-    return multitouchDevices && ioNotificationPort;
+- (instancetype)init {
+    self = [super init];
+
+    if(!registerContactFrameCallback() || !registerMultitouchDeviceAddedCallback()) {
+        NSLog(@"Cannot start Multitouch Support");
+        return nil;
+    }
+
+    return self;
 }
 
-+ (NSInteger)onMousepad {
+- (void)dealloc {
+    std::lock_guard lock(mutex);
+    unregisterContactFrameCallback();
+    unregisterMultitouchDeviceAddedCallback();
+}
+
+- (NSInteger)onMousepad {
     std::lock_guard lock(mutex);
     return isTrackpad ? 0 : touchCount;
 }
 
-+ (NSInteger)onTrackpad {
+- (NSInteger)onTrackpad {
     std::lock_guard lock(mutex);
     return isTrackpad ? touchCount : 0;
 }
 
-+ (bool)isOneAndAHalfTap {
+- (bool)isOneAndAHalfTap {
     std::lock_guard lock(mutex);
     return touchCount && lastTouchCounts == std::vector{1};
 }
 
-+ (bool)isDoubleTap {
+- (bool)isDoubleTap {
     std::lock_guard lock(mutex);
     return touchCount && lastTouchCounts == std::vector{touchCount};
 }
 
-+ (void)setOnTrackpadTap:(Callback)callback {
+- (void)setOnTrackpadTap:(Callback)callback {
     std::lock_guard lock(mutex);
     onTrackpadTap = callback;
 }
 
-+ (NSInteger)lastTouchCount {
+- (NSInteger)lastTouchCount {
     std::lock_guard lock(mutex);
     return lastTouchCounts.size() ? lastTouchCounts.back() : 0;
 }

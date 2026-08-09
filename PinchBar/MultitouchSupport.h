@@ -2,19 +2,22 @@
 
 typedef void (^Callback)();
 
+NS_ASSUME_NONNULL_BEGIN
+
 @interface Multitouch : NSObject
 
-+ (bool)start;
-+ (bool)isStarted;
+@property (class, nonatomic, readonly, nullable) Multitouch *shared NS_SWIFT_NAME(shared);
 
-+ (NSInteger)onMousepad;
-+ (NSInteger)onTrackpad;
+- (NSInteger)onMousepad;
+- (NSInteger)onTrackpad;
 
-+ (bool)isOneAndAHalfTap;
-+ (bool)isDoubleTap;
+- (bool)isOneAndAHalfTap;
+- (bool)isDoubleTap;
 
-+ (void)setOnTrackpadTap:(Callback)callback;
+- (void)setOnTrackpadTap:(nullable Callback)callback;
 
-+ (NSInteger)lastTouchCount;
+- (NSInteger)lastTouchCount;
 
 @end
+
+NS_ASSUME_NONNULL_END

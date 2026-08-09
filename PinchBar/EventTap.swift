@@ -37,14 +37,6 @@ class EventTap {
         
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
         
-        if let mcMapping = mapping as? MiddleClickMapping {
-            Multitouch.setOnTrackpadTap(WeakFunc(mcMapping, MiddleClickMapping.onTrackpadTap).call)
-        }
-        
-        if !Multitouch.isStarted() && !Multitouch.start() {
-            NSLog("Cannot start Multitouch Support")
-        }
-        
         LogiHIDPP.shared.onDeviceReady = { device in
             NSLog("Logitech Mouse connected: \(device.name)")
         }

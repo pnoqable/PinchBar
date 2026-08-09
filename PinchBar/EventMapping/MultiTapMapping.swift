@@ -14,8 +14,8 @@ class MultiTapMapping: SettingsHolder<MultiTapMapping.Settings>, EventMapping {
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.subtype == .magnify {
             if event.magnificationPhase == .began {
-                isOneAndAHalfTap = Multitouch.isOneAndAHalfTap()
-                isDoubleTap      = Multitouch.isDoubleTap()
+                isOneAndAHalfTap = Multitouch.shared?.isOneAndAHalfTap() ?? false
+                isDoubleTap      = Multitouch.shared?.isDoubleTap() ?? false
             } else if event.magnificationPhase == .ended {
                 isOneAndAHalfTap = false
                 isDoubleTap      = false

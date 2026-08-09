@@ -72,6 +72,7 @@ class MapScrollToPinchState: EventStateMachine {
     }
     
     func feed(_ event: CGEvent) -> Transition {
+        let mt = Multitouch.shared
         let isShortlyAfter = { t in DispatchTime.now() < t + 0.1 }
         
         switch state {
@@ -81,7 +82,7 @@ class MapScrollToPinchState: EventStateMachine {
         case let .dropMomentum(since: t) where event.scrollPhase == .began && isShortlyAfter(t):
             state = .dropScroll(since: t)
         case let .dropMomentum(since: t) where !event.momentumPhase && !isShortlyAfter(t)
-            && Multitouch.onMousepad() != onMousepad:
+            && mt?.onMousepad() != onMousepad:
             state = .inactive
         case let .dropScroll(since: t) where event.scrollPhase == .ended:
             state = .dropMomentum(since: t)
@@ -90,7 +91,7 @@ class MapScrollToPinchState: EventStateMachine {
             state = .inactive
             event.scrollPhase = .began
         default:
-            if event.scrollPhase == .began && Multitouch.onMousepad() == onMousepad {
+            if event.scrollPhase == .began && mt?.onMousepad() == onMousepad {
                 state = .mapping
             }
         }

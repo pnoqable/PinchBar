@@ -13,12 +13,19 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
     
     @UserDefault("Clicking", "com.apple.AppleMultitouchTrackpad") var isTrackpadTapActive = false
     
+    required init(_ settings: Settings) {
+        super.init(settings)
+        
+        Multitouch.shared?.setOnTrackpadTap(WeakFunc(self, MiddleClickMapping.onTrackpadTap).call)
+    }
+    
     func map(_ event: CGEvent) -> [CGEvent] {
         if event.type ∈ .leftMouseDown ... .rightMouseUp {
+            let mt = Multitouch.shared
             var justFinished = false
             if event.type ∈ [.leftMouseDown, .rightMouseDown],
-               settings.onMousepad > 0 && Multitouch.onMousepad() == settings.onMousepad
-                || settings.onTrackpad > 0 && Multitouch.onTrackpad() == settings.onTrackpad {
+               settings.onMousepad > 0 && mt?.onMousepad() == settings.onMousepad
+                || settings.onTrackpad > 0 && mt?.onTrackpad() == settings.onTrackpad {
                 mapMiddleClick = true
             } else if mapMiddleClick && event.type ∈ [.leftMouseUp, .rightMouseUp] {
                 mapMiddleClick = false
@@ -43,7 +50,7 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
     func onTrackpadTap() {
         if skipTapEvent {
             skipTapEvent = false
-        } else if Multitouch.lastTouchCount() == settings.onTrackpad && isTrackpadTapActive {
+        } else if Multitouch.shared?.lastTouchCount() == settings.onTrackpad && isTrackpadTapActive {
             let event = CGEvent(mouseEventSource: nil,
                                 mouseType: .otherMouseDown,
                                 mouseCursorPosition: CGEvent(source: nil)!.location,
