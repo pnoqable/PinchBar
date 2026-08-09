@@ -15,6 +15,15 @@ import Cocoa
                          name: NSWorkspace.didActivateApplicationNotification, object: nil)
         
         activeAppChanged()
+        
+        LogiHIDPP.shared.onDeviceReady = { device in
+            NSLog("Logitech Mouse connected: \(device.name)")
+            if device.name.contains("M720 Triathlon") {
+                LogiHIDPP.shared.setDivert(cid: 83, enabled: false, for: device)
+                LogiHIDPP.shared.setDivert(cid: 86, enabled: false, for: device)
+                NSLog("Disabled Divert of Thumb buttons for \(device.name)")
+            }
+        }
     }
     
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

@@ -36,10 +36,6 @@ class EventTap {
         weakSelf.instance = self
         
         CFRunLoopAddSource(CFRunLoopGetMain(), runLoopSource, .commonModes)
-        
-        LogiHIDPP.shared.onDeviceReady = { device in
-            NSLog("Logitech Mouse connected: \(device.name)")
-        }
     }
     
     deinit {
