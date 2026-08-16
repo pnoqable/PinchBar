@@ -47,10 +47,10 @@ class MiddleClickMapping: SettingsHolder<MiddleClickMapping.Settings>, EventMapp
         return [event]
     }
     
-    func onTrackpadTap() {
+    func onTrackpadTap(onTrackpad: Int) {
         if skipTapEvent {
             skipTapEvent = false
-        } else if Multitouch.shared?.lastTouchCount() == settings.onTrackpad && isTrackpadTapActive {
+        } else if onTrackpad == settings.onTrackpad && isTrackpadTapActive {
             let event = CGEvent(mouseEventSource: nil,
                                 mouseType: .otherMouseDown,
                                 mouseCursorPosition: CGEvent(source: nil)!.location,

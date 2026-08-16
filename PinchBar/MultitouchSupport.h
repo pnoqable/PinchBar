@@ -1,6 +1,6 @@
 #import <Foundation/Foundation.h>
 
-typedef void (^Callback)();
+typedef void (^LongSetter)(long);
 
 NS_ASSUME_NONNULL_BEGIN
 
@@ -14,9 +14,7 @@ NS_ASSUME_NONNULL_BEGIN
 - (bool)isOneAndAHalfTap;
 - (bool)isDoubleTap;
 
-- (void)setOnTrackpadTap:(nullable Callback)callback;
-
-- (NSInteger)lastTouchCount;
+- (void)setOnTrackpadTap:(nullable LongSetter)callback;
 
 @end
 

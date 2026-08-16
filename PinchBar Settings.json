@@ -1,0 +1,158 @@
+{
+  "appPresets" : {
+    "ChatGPT" : "Font Size",
+    "ChatGPT Classic" : "Font Size",
+    "Claude" : "Font Size",
+    "Code" : "Font Size",
+    "Cubase" : "Cubase 13",
+    "Firefox" : "Font Size\/cmd",
+    "Mail" : "Font Size",
+    "Steam Helper" : "Font Size\/cmd",
+    "Terminal" : "Font Size",
+    "TextEdit" : "Font Size\/cmd",
+    "Thunderbird" : "Font Size",
+    "Xcode" : "Font Size"
+  },
+  "disabledPMs" : [
+
+  ],
+  "preMappings" : {
+    "Fix Logi Flags" : {
+      "fixLogiFlags" : {
+
+      }
+    },
+    "Logi Mouse Zoom" : {
+      "logiMouseZoom" : {
+        "cid" : 86,
+        "sensivity" : 0.002
+      }
+    },
+    "Magic Mouse Zoom" : {
+      "magicMouseZoom" : {
+        "onMousepad" : 2,
+        "sensivity" : 0.0050000000000000001
+      }
+    },
+    "Middle Click" : {
+      "middleClick" : {
+        "onMousepad" : 2,
+        "onTrackpad" : 3
+      }
+    },
+    "Multi Click" : {
+      "multiClick" : {
+        "button" : 4,
+        "doubleClickFlags" : 1048576,
+        "tripleClickFlags" : 524288
+      }
+    },
+    "Multi Tap" : {
+      "multiTap" : {
+        "doubleTapFlags" : 1048576,
+        "oneAndAHalfTapFlags" : 524288
+      }
+    },
+    "Other Mouse Scroll" : {
+      "otherMouseScroll" : {
+        "button" : 3
+      }
+    },
+    "Other Mouse Zoom" : {
+      "otherMouseZoom" : {
+        "button" : 4,
+        "sensivity" : 0.002
+      }
+    }
+  },
+  "presets" : {
+    "Cubase" : {
+      "0" : {
+        "flags" : 1048576,
+        "replaceWith" : {
+          "wheel" : {
+
+          }
+        },
+        "sensivity" : 200
+      },
+      "524288" : {
+        "flags" : 524288,
+        "replaceWith" : {
+          "keys" : {
+            "codeA" : 5,
+            "codeB" : 4
+          }
+        },
+        "sensivity" : 5
+      },
+      "1048576" : {
+        "flags" : 131072,
+        "replaceWith" : {
+          "keys" : {
+            "codeA" : 5,
+            "codeB" : 4
+          }
+        },
+        "sensivity" : 5
+      }
+    },
+    "Cubase 13" : {
+      "0" : {
+        "flags" : 1048576,
+        "replaceWith" : {
+          "wheel" : {
+
+          }
+        },
+        "sensivity" : 200
+      },
+      "524288" : {
+        "flags" : 1572864,
+        "replaceWith" : {
+          "wheel" : {
+
+          }
+        },
+        "sensivity" : 500
+      },
+      "1048576" : {
+        "flags" : 1179648,
+        "replaceWith" : {
+          "wheel" : {
+
+          }
+        },
+        "sensivity" : 500
+      }
+    },
+    "Font Size" : {
+      "0" : {
+        "flags" : 1048576,
+        "replaceWith" : {
+          "keys" : {
+            "codeA" : 44,
+            "codeB" : 30
+          }
+        },
+        "sensivity" : 5
+      },
+      "1048576" : {
+        "flags" : 0,
+        "sensivity" : 1
+      }
+    },
+    "Font Size\/cmd" : {
+      "1048576" : {
+        "flags" : 1048576,
+        "replaceWith" : {
+          "keys" : {
+            "codeA" : 44,
+            "codeB" : 30
+          }
+        },
+        "sensivity" : 5
+      }
+    }
+  }
+}
