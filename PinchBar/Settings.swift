@@ -2,14 +2,15 @@ import Cocoa
 
 class Settings: WithUserDefaults {
     struct Defaults {
-        static let preMappings = ["Fix Logi Flags":     PreMapping.fixLogiFlags,
-                                  "Logi Mouse Zoom":    PreMapping.logiMouseZoom,
-                                  "Magic Mouse Zoom":   PreMapping.magicMouseZoom,
-                                  "Middle Click":       PreMapping.middleClick,
-                                  "Multi Click":        PreMapping.multiClick,
-                                  "Multi Tap":          PreMapping.multiTap,
-                                  "Other Mouse Scroll": PreMapping.otherMouseScroll,
-                                  "Other Mouse Zoom":   PreMapping.otherMouseZoom]
+        static let preMappings = ["Fix Logi Flags":          PreMapping.fixLogiFlags,
+                                  "Logi Mouse Zoom":         PreMapping.logiMouseZoom,
+                                  "Magic Mouse Zoom":        PreMapping.magicMouseZoom,
+                                  "Middle Click":            PreMapping.middleClick,
+                                  "Multi Click":             PreMapping.multiClick,
+                                  "Multi Tap":               PreMapping.multiTap,
+                                  "Other Mouse Scroll":      PreMapping.otherMouseScroll,
+                                  "Other Mouse Zoom":        PreMapping.otherMouseZoom,
+                                  "Right Option to Control": PreMapping.rightOptToCtrl]
         
         static let presets    = ["Cubase":        Preset(.cubase),
                                  "Cubase 13":     Preset(.cubase13),

@@ -9,17 +9,19 @@ enum PreMapping: Comparable {
     case multiTap        (MultiTapMapping.Settings)
     case otherMouseScroll(OtherMouseScrollMapping.Settings)
     case otherMouseZoom  (OtherMouseZoomMapping.Settings)
+    case rightOptToCtrl(RightOptToCtrlMapping.Settings)
     
     var mapping: any EventMapping {
         switch self {
-        case let .fixLogiFlags    (settings): return FixLogiFlags           (settings)
-        case let .logiMouseZoom   (settings): return LogiMouseZoomMapping   (settings)
-        case let .magicMouseZoom  (settings): return MagicMouseZoomMapping  (settings)
-        case let .middleClick     (settings): return MiddleClickMapping     (settings)
-        case let .multiClick      (settings): return MultiClickMapping      (settings)
-        case let .multiTap        (settings): return MultiTapMapping        (settings)
-        case let .otherMouseScroll(settings): return OtherMouseScrollMapping(settings)
-        case let .otherMouseZoom  (settings): return OtherMouseZoomMapping  (settings)
+        case let .fixLogiFlags       (settings): return FixLogiFlags               (settings)
+        case let .logiMouseZoom      (settings): return LogiMouseZoomMapping       (settings)
+        case let .magicMouseZoom     (settings): return MagicMouseZoomMapping      (settings)
+        case let .middleClick        (settings): return MiddleClickMapping         (settings)
+        case let .multiClick         (settings): return MultiClickMapping          (settings)
+        case let .multiTap           (settings): return MultiTapMapping            (settings)
+        case let .otherMouseScroll   (settings): return OtherMouseScrollMapping    (settings)
+        case let .otherMouseZoom     (settings): return OtherMouseZoomMapping      (settings)
+        case let .rightOptToCtrl     (settings): return RightOptToCtrlMapping(settings)
         }
     }
 }
@@ -36,12 +38,13 @@ extension PreMapping {
                                                               doubleTapFlags:      .maskCommand))
     static let otherMouseScroll = Self.otherMouseScroll(.init(button: .fourth))
     static let otherMouseZoom   = Self.otherMouseZoom  (.init(button: .fifth, sensivity: 0.001))
+    static let rightOptToCtrl   = Self.rightOptToCtrl  (.init())
 }
 
 extension PreMapping: Codable {
     enum CodingKeys: CodingKey {
         case fixLogiFlags, logiMouseZoom, magicMouseZoom, middleClick, multiClick, multiTap,
-             otherMouseScroll, otherMouseZoom
+             otherMouseScroll, otherMouseZoom, rightOptToCtrl
     }
     
     init(from decoder: Decoder) throws {
@@ -62,6 +65,7 @@ extension PreMapping: Codable {
             case .multiTap:         self = .multiTap        (try c.decode(MultiTapMapping.Settings.self,         forKey: key))
             case .otherMouseScroll: self = .otherMouseScroll(try c.decode(OtherMouseScrollMapping.Settings.self, forKey: key))
             case .otherMouseZoom:   self = .otherMouseZoom  (try c.decode(OtherMouseZoomMapping.Settings.self,   forKey: key))
+            case .rightOptToCtrl:   self = .rightOptToCtrl  (try c.decode(RightOptToCtrlMapping.Settings.self,   forKey: key))
             }
         } catch {
             throw DecodingError.typeMismatch(Self.self,
@@ -81,6 +85,7 @@ extension PreMapping: Codable {
         case let .multiTap(settings):         try c.encode(settings, forKey: .multiTap)
         case let .otherMouseScroll(settings): try c.encode(settings, forKey: .otherMouseScroll)
         case let .otherMouseZoom(settings):   try c.encode(settings, forKey: .otherMouseZoom)
+        case let .rightOptToCtrl(settings):   try c.encode(settings, forKey: .rightOptToCtrl)
         }
     }
 }

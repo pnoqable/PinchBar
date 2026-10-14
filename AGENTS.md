@@ -125,6 +125,7 @@ protocol EventMapping {
 - `OtherMouseScrollMapping` - Maps other mouse buttons to horizontal scroll
 - `OtherMouseZoomMapping` - Maps other mouse button + scroll to magnify
 - `PinchMapping` - Core mapping: pinch → scroll/keys/pinch with modifiers
+- `RightOptToCtrlMapping` - Maps the right Option key to the right Control key (keyboards without a right Control key)
 
 All use `SettingsHolder<Settings>` base class for settings storage (defined in `EventMapping/EventMapping.swift`).
 
@@ -318,6 +319,7 @@ Applied to all apps before preset:
 - **Multi Tap**: 1.5-tap / double-tap gestures → modifier flags
 - **Other Mouse Scroll**: 4th mouse button → horizontal scroll
 - **Other Mouse Zoom**: Center button + scroll → magnify
+- **Right Option to Control**: Right Option key → right Control key (e.g. Ctrl+←/→ to switch desktops)
 
 Users can disable individual pre-mappings via status menu.
 

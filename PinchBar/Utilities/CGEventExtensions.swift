@@ -10,6 +10,16 @@ extension CGEventFlags: @retroactive Codable, @retroactive Hashable {
     static let maskNoFlags = Self([])
     static let maskModifierKeys = Self([.maskShift, .maskControl, .maskAlternate, .maskCommand])
     var justModifiers: Self { intersection(.maskModifierKeys) }
+    
+    // device-dependent bits that distinguish the left/right variant of a modifier key
+    static let deviceLeftControl  = Self(rawValue: 0x0000_0001)
+    static let deviceLeftShift    = Self(rawValue: 0x0000_0002)
+    static let deviceRightShift   = Self(rawValue: 0x0000_0004)
+    static let deviceLeftCommand  = Self(rawValue: 0x0000_0008)
+    static let deviceRightCommand = Self(rawValue: 0x0000_0010)
+    static let deviceLeftOption   = Self(rawValue: 0x0000_0020)
+    static let deviceRightOption  = Self(rawValue: 0x0000_0040)
+    static let deviceRightControl = Self(rawValue: 0x0000_2000)
 }
 
 extension CGEventType: @retroactive Comparable {
@@ -38,6 +48,11 @@ extension CGEvent {
     var mouseButton: CGMouseButton {
         get { .init(rawValue: UInt32(getIntegerValueField(.mouseEventButtonNumber)))! }
         set { setIntegerValueField(.mouseEventButtonNumber, value: Int64(newValue.rawValue)) }
+    }
+    
+    var keyCode: CGKeyCode {
+        get { CGKeyCode(getIntegerValueField(.keyboardEventKeycode)) }
+        set { setIntegerValueField(.keyboardEventKeycode, value: Int64(newValue)) }
     }
     
     var mouseClickState: Int64 {
